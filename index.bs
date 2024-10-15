@@ -6,9 +6,9 @@ Notes:
   tags will be rendered. It also has the spec 'Level' value (gratuitously) appended.
 -->
 
-<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 1</h1>
+<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 2-SNAPSHOT</h1>
 <pre class='metadata'>
-Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 1
+Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 2-SNAPSHOT
 Status: ED
 Prepare for TR: false
 ED: https://w3c.github.io/webauthn/
@@ -7580,7 +7580,7 @@ However, [=authenticators=] that do not utilize [[!FIDO-CTAP]] do not necessaril
 This section defines extensions that are both [=client extensions=] and [=authenticator extensions=].
 
 
-### Signing extension (<dfn for="extension">sign</dfn>) version 1 ### {#sctn-sign-extension}
+### Signing extension (<dfn for="extension">sign</dfn>) version 2-SNAPSHOT ### {#sctn-sign-extension}
 
 This [=authenticator extension|authenticator=] [=registration extension=] and [=authentication extension=]
 allows a [=[RP]=] to sign arbitrary data using an asymmetric key pair associated with a [=credential=]
@@ -8075,7 +8075,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     1. If |allowCredentialDescriptorList| is empty,
         return an error code equivalent to "{{NotAllowedError}}" and terminate these processing steps.
-        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_NO_CREDENTIALS`.
+        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
 
     1. If <code>|extSign|[phData]</code> is not present or <code>|extSign|[key-refs]</code> is not present,
         or if the [=list/size=] of <code>|extSign|[key-refs]</code> does not equal the [=list/size=] of |allowCredentialDescriptorList|,
@@ -8241,6 +8241,10 @@ To decode |kid|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, per
 #### Revision History #### {#sctn-sign-extension-history}
 
 [INFORMATIVE]
+
+- Version 2 (in progress)
+    - Published: TBD
+    - Changed error code when `allowList` is empty
 
 - Version 1
     - Published: 2024-09-11
