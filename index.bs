@@ -7849,26 +7849,28 @@ where neither the signing key pair nor the associated [=credential=] need to con
         does not equal the [=list/size=] of <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/allowCredentials}}</code>,
         return a {{DOMException}} whose name is “{{NotSupportedError}}”.
 
-    1. Let |keyHandles| be a new CBOR array.
-
     1. [=list/For each=] |allowedCredential| in <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/allowCredentials}}</code>:
 
-        1. Let |encodedCredentialId| be the base64url encoding of <code>|allowedCredential|.{{PublicKeyCredentialDescriptor/id}}</code>.
+        1. Let |encodedCredentialId| be the [=base64url encoding=] of <code>|allowedCredential|.{{PublicKeyCredentialDescriptor/id}}</code>.
         1. Let |keyHandle| be <code>|extSign|.{{AuthenticationExtensionsSignInputs/sign}}.{{AuthenticationExtensionsSignSignInputs/keyHandleByCredential}}[|encodedCredentialId|]</code>.
         1. If |keyHandle| is undefined, return a {{DOMException}} whose name is “{{SyntaxError}}”.
-        1. Append |keyHandle| to |keyHandles|, encoded as a CBOR byte string.
 
-        If the [=client=] divides {{PublicKeyCredentialRequestOptions/allowCredentials}} into smaller batches
-        to fit [=authenticator=] message length limits,
-        the client MUST also divide |keyHandles| into batches of the same size and in the same order.
+    1. Using some [=client=]-specific procedure,
+        determine which entries of <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/allowCredentials}}</code>
+        are valid for the [=authenticator=].
+        Let |chosenCredentialId| be an arbitrary choice of one of those entries.
+        Let |chosenCredentialIdB64| be the [=base64url encoding=]
+        of <code>|chosenCredentialId|.{{PublicKeyCredentialDescriptor/id}}</code>.
 
-    1. If the [=list/size=] of |keyHandles| does not equal the [=list/size=] of
-        <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/allowCredentials}}</code>,
-        return a {{DOMException}} whose name is “{{SyntaxError}}”.
+        Note: For example, for [[FIDO-CTAP]] authenticators this might be determined
+        by invoking the CTAP2 `authenticatorGetAssertion` command with the `up` option set to [FALSE].
+
+        If none are valid, abort these extension processing steps.
+        Omit the `sign` [=authenticator extension input=] and the {{AuthenticationExtensionsClientOutputs/sign}} [=client extension output=].
 
     1. Set the `sign` authenticator extension input to a CBOR map with the entries:
         - `phData`: <code>|extSign|.{{AuthenticationExtensionsSignInputs/sign}}.{{AuthenticationExtensionsSignSignInputs/phData}}</code> encoded as a CBOR byte string.
-        - `key-refs`: |keyHandles|.
+        - `key-ref`: <code>|extSign|.{{AuthenticationExtensionsSignInputs/sign}}.{{AuthenticationExtensionsSignSignInputs/keyHandleByCredential}}[|chosenCredentialIdB64|]</code>.
 
     1. After the [=authenticatorGetAssertion=] operation is successful,
         let |authData| denote <code>|assertionCreationData|.[=assertionCreationData/authenticatorDataResult=]</code>.
@@ -7881,7 +7883,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
             The [=authenticator extension output=] <code>|authData|.[=authData/extensions=]["sign"][sig]</code>
             parsed as an {{ArrayBuffer}}.
 
-    The CBOR map keys `phData`, `key-refs` and `sig` are aliases defined below
+    The CBOR map keys `phData`, `key-ref` and `sig` are aliases defined below
     in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
 
@@ -7957,7 +7959,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
     kid = 2
     alg = 3
     flags = 4
-    key-refs = 5
+    key-ref = 5
 
     $$extensionInput //= (
       sign: {
@@ -7970,7 +7972,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
         //
         ; Authentication (signing) input
         phData     => bstr,
-        key-refs   => [ + bstr .cbor COSE_Key_Ref ],
+        key-ref    => bstr .cbor COSE_Key_Ref,
       },
     )
     ```
@@ -8009,13 +8011,10 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
         This setting is recorded in the [=attestation object=] for the signing key pair.
 
-    :   key-refs
-    ::  A list of [=signing key handles=] eligible for generating a signature.
+    :   key-ref
+    ::  The [=signing key handle=] to use for generating the signature.
         MUST NOT be present during [=registration ceremonies=].
         MUST be present during [=authentication ceremonies=].
-        MUST have [=list/size=] equal to that of {{PublicKeyCredentialRequestOptions/allowCredentials}},
-        and each [=list/item=] MUST represent the signing key pair associated with the [=credential=]
-        identified by the corresponding [=list/item=] in {{PublicKeyCredentialRequestOptions/allowCredentials}}.
 
         Suitable values for this entry MAY be constructed
         from
@@ -8024,10 +8023,10 @@ where neither the signing key pair nor the associated [=credential=] need to con
         using the procedure to [=extension/sign/construct a key handle from a COSE_Key=]
         defined in [[#sctn-sign-extension-key-handle-from-cose-key]].
 
-    Note: The `key-refs` entry is defined as an array of byte strings containing CBOR-encoded data
-    instead of direct CBOR maps because the [=CTAP2 canonical CBOR encoding form=] allows at most 4 levels of nested CBOR structures.
-    If `key-refs` would contain CBOR maps as items, those maps would exceed this nesting limit
-    when the extension input is embedded in the CTAP2 message structure.
+    Note: The `key-ref` entry is defined as a byte string containing CBOR-encoded data
+    instead of a direct CBOR map because the [=CTAP2 canonical CBOR encoding form=] allows at most 4 levels of nested CBOR structures.
+    If `key-ref` were an unwrapped CBOR map, it could exceed this nesting limit
+    if it in turn contains arrays or maps as values.
 
 
 : Authenticator extension processing ([=registration extension|registration=])
@@ -8122,22 +8121,11 @@ where neither the signing key pair nor the associated [=credential=] need to con
         return an error code equivalent to "{{NotAllowedError}}" and terminate these processing steps.
         Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
 
-    1. If <code>|extSign|[phData]</code> is not present or <code>|extSign|[key-refs]</code> is not present,
-        or if the [=list/size=] of <code>|extSign|[key-refs]</code> does not equal the [=list/size=] of |allowCredentialDescriptorList|,
+    1. If <code>|extSign|[phData]</code> is not present or <code>|extSign|[key-ref]</code> is not present,
         return an error code equivalent to "{{UnknownError}}" and terminate these processing steps.
         Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
 
-    1. Let |credentialId| be the [=credential ID=] of the [=credential=] being used for this assertion.
-
-    1. Let |credentialIdIndex| be the index of |credentialId| in |allowCredentialDescriptorList|.
-
-    1. Let |keyRefCbor| be <code>|extSign|[key-refs][|credentialIdIndex|]</code>.
-
-    1. If |keyRefCbor| is null or undefined,
-        return an error code equivalent to "{{UnknownError}}" and terminate these processing steps.
-        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
-
-    1. Let |keyRef| be |keyRefCbor| decoded as a COSE_Key_Ref strucure.
+    1. Let |keyRef| be <code>|extSign|[key-ref]</code> decoded as a COSE_Key_Ref strucure.
 
     1. Decode the authenticator-specific encoding of <code>|keyRef|[kid]</code> to extract the encoded |chosenAlg|, |signFlags| and |auxIkm|.
         This procedure SHOULD verify integrity to ensure that <code>|keyRef|[kid]</code> was generated by this authenticator.
@@ -8169,7 +8157,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
           ISSUE: Need to define pre-hashing more precisely.
 
-    The CBOR map keys `phData`, `key-refs`, `kid`, `alg` and `sig` are aliases defined above and below
+    The CBOR map keys `phData`, `key-ref`, `kid`, `alg` and `sig` are aliases defined above and below
     in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
 
@@ -8305,6 +8293,7 @@ To decode |kid|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, per
     - Published: TBD
     - Changed error code when `allowList` is empty
     - Moved `att-obj` from authenticator data to unsigned extension outputs and client extension outputs
+    - Changed `key-refs: [+ bstr]` authenticator input to single `key-ref: bstr`
 
 - Version 1
     - Published: 2024-09-11
