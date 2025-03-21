@@ -3961,6 +3961,19 @@ containing the [=authenticator extension output=] values for zero or more [=WebA
 Extensions can add members as described in [[#sctn-extension-request-parameters]].
 
 
+### Authentication Extensions Unsigned Authenticator Outputs (CDDL type `AuthenticationExtensionsUnsignedAuthenticatorOutputs`) ### {#iface-authentication-extensions-unsigned-authenticator-outputs}
+
+```
+AuthenticationExtensionsUnsignedAuthenticatorOutputs = {
+  * $$unsignedExtensionOutput
+} .within { * tstr => any }
+```
+
+The [=CDDL=] type `AuthenticationExtensionsUnsignedAuthenticatorOutputs` defines a [=CBOR=] map
+containing the [=unsigned extension output=] values for zero or more [=WebAuthn Extensions=].
+Extensions can add members as described in [[#sctn-extension-request-parameters]].
+
+
 ## Supporting Data Structures ## {#sctn-supporting-data-structures}
 
 The [=public key credential=] type uses certain data structures that are specified in supporting specifications. These are as
@@ -7037,7 +7050,8 @@ input=],
 and MUST define extensions for the [=CDDL=] types
 <code>[[#iface-authentication-extensions-authenticator-inputs|AuthenticationExtensionsAuthenticatorInputs]]</code>
 and <code>[[#iface-authentication-extensions-authenticator-outputs|AuthenticationExtensionsAuthenticatorOutputs]]</code>
-by defining an additional choice for the `$$extensionInput` and `$$extensionOutput` [=group sockets=]
+by defining an additional choice for the `$$extensionInput` and `$$extensionOutput` [=group sockets=],
+and OPTIONALLY the `$$unsignedExtensionOutput` [=group socket=],
 using the [=extension identifier=] as the entry key.
 Extensions that do not require input parameters, and are thus defined as taking a Boolean [=client extension input=]
 value set to [TRUE],
@@ -7046,7 +7060,8 @@ SHOULD define the [=authenticator extension input=] also as the constant Boolean
 
 The following example defines that an extension with [=extension identifier|identifier=] `webauthnExample_foobar`
 takes an unsigned integer as [=authenticator extension input=],
-and returns an array of at least one byte string as [=authenticator extension output=]:
+and returns an array of at least one byte string as [=authenticator extension output=],
+with no [=unsigned extension outputs=]:
 
 <xmp class="example" highlight="cddl">
     $$extensionInput //= (
