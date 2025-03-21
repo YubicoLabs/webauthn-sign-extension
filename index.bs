@@ -6,48 +6,16 @@ Notes:
   tags will be rendered. It also has the spec 'Level' value (gratuitously) appended.
 -->
 
-<h1>Web Authentication:<br>An API for accessing Public Key Credentials<br>Level 3</h1>
+<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 1</h1>
 <pre class='metadata'>
-Title: Web Authentication: An API for accessing Public Key Credentials - Level 3
+Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 1
 Status: ED
-Prepare for TR: true
-TR: https://www.w3.org/TR/webauthn-3/
+Prepare for TR: false
 ED: https://w3c.github.io/webauthn/
-Previous Version: https://www.w3.org/TR/2021/REC-webauthn-2-20210408/
-Previous Version: https://www.w3.org/TR/2019/REC-webauthn-1-20190304/
 Shortname: webauthn
-Level: 3
-Include MDN Panels: maybe
-Editor: Tim Cappalli, w3cid 111190, Okta, tim.cappalli@okta.com
-Editor: Michael B. Jones, w3cid 38745, Self-Issued Consulting, michael_b_jones@hotmail.com
-Editor: Akshay Kumar, w3cid 99318, Microsoft, akshayku@microsoft.com
+Level: 0
 Editor: Emil Lundberg, w3cid 102508, Yubico, emil@yubico.com
-Editor: Matthew Miller, w3cid 129314, Cisco, mattmil3@cisco.com
-Former Editor: Dirk Balfanz, w3cid 47648, Google, balfanz@google.com
-Former Editor: Vijay Bharadwaj, w3cid 55440, Microsoft, vijay.bharadwaj@microsoft.com
-Former Editor: Arnar Birgisson, w3cid 87332, Google, arnarb@google.com
-Former Editor: Alexei Czeskis, w3cid 87258, Google, aczeskis@google.com
-Former Editor: Jeff Hodges, w3cid 43843, formerly Google
-Former Editor: J.C. Jones, w3cid 87240, formerly Mozilla
-Former Editor: Hubert Le Van Gong, w3cid 84817, PayPal, hlevangong@paypal.com
-Former Editor: Angelo Liao, w3cid 94342, Microsoft, huliao@microsoft.com
-Former Editor: Rolf Lindemann, w3cid 84447, Nok Nok Labs, rolf@noknok.com
-!Contributors: <a href="mailto:WebAuthn@ve7jtb.com">John Bradley</a> (Yubico)
-!Contributors: <a href="mailto:cbrand@google.com">Christiaan Brand</a> (Google)
-!Contributors: <a href="mailto:agl@google.com">Adam Langley</a> (Google)
-!Contributors: <a href="mailto:mandyam@qti.qualcomm.com">Giridhar Mandyam</a> (Qualcomm)
-!Contributors: <a href="mailto:pascoe@apple.com">Pascoe</a> (Apple)
-!Contributors: <a href="mailto:nsatragno@google.com">Nina Satragno</a> (Google)
-!Contributors: <a href="mailto:kieun.shin@sk.com">Ki-Eun Shin</a> (SK Telecom)
-!Contributors: <a href="mailto:nick.steele@agilebits.com">Nick Steele</a> (1Password)
-!Contributors: <a href="mailto:jiewen_tan@apple.com">Jiewen Tan</a> (Apple)
-!Contributors: <a href="mailto:sweeden@au1.ibm.com">Shane Weeden</a> (IBM)
-!Contributors: <a href="mailto:mkwst@google.com">Mike West</a> (Google)
-!Contributors: <a href="mailto:jyasskin@google.com">Jeffrey Yasskin</a> (Google)
-!Contributors: <a href="mailto:aaberg@bitwarden.com">Anders Åberg</a> (Bitwarden)
 group: webauthn
-Issue Tracking: GitHub https://github.com/w3c/webauthn/issues
-!Tests: <a href=https://github.com/web-platform-tests/wpt/tree/master/webauthn>web-platform-tests webauthn/</a> (<a href=https://github.com/web-platform-tests/wpt/labels/webauthn>ongoing work</a>)
 Text Macro: FALSE <code>false</code>
 Text Macro: PII personally identifying information
 Text Macro: RP Relying Party
@@ -67,18 +35,10 @@ Text Macro: DISCOVER-METHOD-ARGS (origin, options, sameOriginWithAncestors)
 Text Macro: DISCOVER-METHOD [[DiscoverFromExternalSource]][DISCOVER-METHOD-ARGS]
 Text Macro: DISCOVER-METHOD-DEF \[[DiscoverFromExternalSource]][DISCOVER-METHOD-ARGS]
 Ignored Vars: op, alg, type, algorithm
-Abstract: This specification defines an API enabling the creation and use of strong, attested, [=scoped=], public key-based
- credentials by [=web applications=], for the purpose of strongly authenticating users. Conceptually, one or more [=public key
- credentials=], each [=scoped=] to a given [=WebAuthn Relying Party=], are created by and [=bound credential|bound=] to
- [=authenticators=] as requested by the web application. The user agent mediates access to [=authenticators=] and their [=public
- key credentials=] in order to preserve user
- privacy. [=Authenticators=] are responsible for ensuring that no operation is performed without [=user consent=].
- [=Authenticators=] provide cryptographic proof of their properties to [=Relying Parties=] via [=attestation=]. This
- specification also describes the functional model for WebAuthn conformant [=authenticators=], including their signature and
- [=attestation=] functionality.
-Boilerplate: omit conformance, omit feedback-header, omit abstract-header
+Abstract: DRAFT: This specification defines a WebAuthn extension for signing arbitrary data.
+ This is a draft in a temporary location; the extension is intended to be upstreamed to WebAuthn after some more prototyping.
+Boilerplate: omit conformance, omit feedback-header, omit abstract-header, omit status, omit copyright
 Markup Shorthands: css off, markdown on, macros-in-autolinks yes
-Implementation Report: https://www.w3.org/2020/12/webauthn-report.html
 </pre>
 
 <style type="text/css">
@@ -7620,7 +7580,7 @@ However, [=authenticators=] that do not utilize [[!FIDO-CTAP]] do not necessaril
 This section defines extensions that are both [=client extensions=] and [=authenticator extensions=].
 
 
-### Signing extension (<dfn for="extension">sign</dfn>) ### {#sctn-sign-extension}
+### Signing extension (<dfn for="extension">sign</dfn>) version 1 ### {#sctn-sign-extension}
 
 This [=authenticator extension|authenticator=] [=registration extension=] and [=authentication extension=]
 allows a [=[RP]=] to sign arbitrary data using an asymmetric key pair associated with a [=credential=]
@@ -8275,6 +8235,16 @@ To decode |kid|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, per
 1. Let |signFlags| be <code>|kidParams|[1]</code>.
 
 1. Let |auxIkm| be <code>|kidParams|[2]</code>.
+
+
+
+#### Revision History #### {#sctn-sign-extension-history}
+
+[INFORMATIVE]
+
+- Version 1
+    - Published: 2024-09-11
+    - Initial port from <a href="https://github.com/w3c/webauthn/pull/2078">https://github.com/w3c/webauthn/pull/2078</a>
 
 
 # User Agent Automation # {#sctn-automation}
