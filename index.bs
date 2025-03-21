@@ -7750,10 +7750,10 @@ where neither the signing key pair nor the associated [=credential=] need to con
             <code>{{AuthenticationExtensionsSignOutputs/generatedKey}}.{{AuthenticationExtensionsSignGeneratedKey/keyHandle}}</code>.
             Alternatively, if the [=[RP]=] needs [=attestation=] for the signing key pair,
             the [=[RP]=] MUST instead verify the [=attestation object=]
-            embedded as the [=authenticator extension output=]
-            <code>[=authData/extensions=]["sign"][att-obj (7)]</code>
+            returned as the [=client extension output=]
+            <code>{{AuthenticationExtensionsSignOutputs/generatedKey}}.{{AuthenticationExtensionsSignGeneratedKey/attestationObject}}</code>
             and construct the [=signing key handle=] from
-            <code>[=authData/extensions=]["sign"][att-obj (7)]["authData"].[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialPublicKey=]</code>
+            <code>{{AuthenticationExtensionsSignOutputs/generatedKey}}.{{AuthenticationExtensionsSignGeneratedKey/attestationObject}}["authData"].[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialPublicKey=]</code>
             using the procedure to [=extension/sign/construct a key handle from a COSE_Key=]
             defined in [[#sctn-sign-extension-key-handle-from-cose-key]].
     </div>
@@ -7785,22 +7785,41 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     1. After the [=authenticatorMakeCredential=] operation is successful,
         let |authData| denote <code>|credentialCreationData|.[=credentialCreationData/attestationObjectResult=]["authData"]</code>.
+        Let |unsignedExtOutputs| denote the [=unsigned extension outputs=].
         Set the [=client extension output=] <code>|credentialCreationData|.[=credentialCreationData/clientExtensionResults=].{{AuthenticationExtensionsClientOutputs/sign}}</code>
         to an {{AuthenticationExtensionsSignOutputs}} value with the members:
 
-        - {{AuthenticationExtensionsSignOutputs/generatedKey}}: An {{AuthenticationExtensionsSignGeneratedKey}} value with the members:
+        - {{AuthenticationExtensionsSignOutputs/generatedKey}}:
+            An {{AuthenticationExtensionsSignGeneratedKey}} value constructed as follows:
+
+            1. Let |origAttObj| be <code>|unsignedExtOutputs|["sign"][att-obj]</code> parsed as a CBOR map.
+            1. Let |pkBytes| be a copy of <code>|origAttObj|["authData"].[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialPublicKey=]</code>
+                as a byte array.
+
+            1. Set {{AuthenticationExtensionsSignOutputs/generatedKey}}
+                to a {{AuthenticationExtensionsSignGeneratedKey}} value with the members:
+
             - {{AuthenticationExtensionsSignGeneratedKey/publicKey}}:
-                An {{ArrayBuffer}} containing
-                the <code>[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialPublicKey=]</code> part
-                of <code>|authData|.[=authData/extensions=]["sign"][att-obj]["authData"]</code>.
+                An {{ArrayBuffer}} containing a copy of |pkBytes|.
 
             - {{AuthenticationExtensionsSignGeneratedKey/keyHandle}}:
                 An {{ArrayBuffer}} constructed as follows:
 
-                1. Let |pk| be the value of {{AuthenticationExtensionsSignGeneratedKey/publicKey}} parsed as a CBOR map.
+                1. Let |pk| be |pkBytes| parsed as a CBOR map.
                 1. Let {{AuthenticationExtensionsSignGeneratedKey/keyHandle}} be an {{ArrayBuffer}}
                     containing the result of [=extension/sign/constructing a key handle from a COSE_Key=]
                     given the COSE_Key structure |pk|.
+
+            - {{AuthenticationExtensionsSignGeneratedKey/attestationObject}}:
+                An {{ArrayBuffer}} constructed as follows:
+
+                1. Let |origAttObj| be <code>|unsignedExtOutputs|["sign"][att-obj]</code> parsed as a CBOR map.
+                1. Let |newAttObj| be an empty CBOR map.
+                1. Set <code>|newAttObj|["fmt"]</code> to <code>|origAttObj|[1]</code>.
+                1. Set <code>|newAttObj|["authData"]</code> to <code>|origAttObj|[2]</code>.
+                1. Set <code>|newAttObj|["attStmt"]</code> to <code>|origAttObj|[3]</code>.
+                1. Set {{AuthenticationExtensionsSignGeneratedKey/attestationObject}} to an {{ArrayBuffer}}
+                    containing |newAttObj| encoded in CBOR.
 
         - {{AuthenticationExtensionsSignOutputs/signature}}:
             The [=authenticator extension output=] <code>|authData|.[=authData/extensions=]["sign"][sig]</code>
@@ -7895,6 +7914,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
     dictionary AuthenticationExtensionsSignGeneratedKey {
         required ArrayBuffer publicKey;
         required ArrayBuffer keyHandle;
+        required ArrayBuffer attestationObject;
     };
     </xmp>
 
@@ -7917,6 +7937,13 @@ where neither the signing key pair nor the associated [=credential=] need to con
             This member is intended for use by [=[RPS]=] that do not request [=attestation=].
             [=[RPS]=] that request attestation SHOULD instead construct key handles
             as described for the [=client extension input=] {{AuthenticationExtensionsSignSignInputs/keyHandleByCredential}}.
+
+        :   <dfn>attestationObject</dfn>
+        ::  An [=attestation object=] for the generated public key.
+            This has the same structure as the top-level [=attestation object=],
+            except the `sign` [=authenticator extension output=] contains a `flags` member
+            indicating the [=user verification=] policy for the signing key
+            instead of a `sig` member containing a signature.
     </div>
 
 
@@ -7991,8 +8018,9 @@ where neither the signing key pair nor the associated [=credential=] need to con
         identified by the corresponding [=list/item=] in {{PublicKeyCredentialRequestOptions/allowCredentials}}.
 
         Suitable values for this entry MAY be constructed
-        from the [=authenticator extension output=]
-        <code>[=authData/extensions=]["sign"][att-obj]["authData"].[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialPublicKey=]</code>
+        from
+        <code>|unsignedExtOutputs|["sign"][att-obj]["authData"].[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialPublicKey=]</code>,
+        given the [=unsigned extension outputs=] as |unsignedExtOutputs|,
         using the procedure to [=extension/sign/construct a key handle from a COSE_Key=]
         defined in [[#sctn-sign-extension-key-handle-from-cose-key]].
 
@@ -8044,6 +8072,17 @@ where neither the signing key pair nor the associated [=credential=] need to con
     1. Set <code>|P_cose|[kid]</code> to |kid|.
 
     1. Set <code>|authData|.[=authData/extensions=]["sign"]</code> to a new CBOR map with the entries:
+
+        - `sig`: The result of signing <code>|extensions|["sign"][phData]</code>, if present, using private key |p|,
+            if |chosenAlg| supports signing during registration.
+            Otherwise omit this entry.
+
+            The signing procedure MUST interpret <code>|extensions|["sign"][phData]</code> as pre-hashed
+            as appropriate for the chosen signing algorithm.
+
+            ISSUE: Need to define pre-hashing more precisely.
+
+    1. Set the [=unsigned extension output=] `"sign"` to a new CBOR map with the entries:
         - `att-obj`: a CBOR byte array
             encoding an [=attestation object=] generated as described in [[#sctn-generating-an-attestation-object]]
             using the inputs:
@@ -8069,15 +8108,6 @@ where neither the signing key pair nor the associated [=credential=] need to con
                     but `flags` is an alias of an integer value.
 
             - |hash|: |hash|.
-
-        - `sig`: The result of signing <code>|extensions|["sign"][phData]</code>, if present, using private key |p|,
-            if |chosenAlg| supports signing during registration.
-            Otherwise omit this entry.
-
-            The signing procedure MUST interpret <code>|extensions|["sign"][phData]</code> as pre-hashed
-            as appropriate for the chosen signing algorithm.
-
-            ISSUE: Need to define pre-hashing more precisely.
 
     The CBOR map keys `alg`, `flags`, `kid`, `sig`, `att-obj` and `phData` are aliases defined above and below
     in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
@@ -8150,15 +8180,15 @@ where neither the signing key pair nor the associated [=credential=] need to con
     ; The symbolic names on the left are represented in CBOR by the integers on the right
     flags = 4
     sig = 6
-    att-obj = 7
 
     $$extensionOutput //= (
       sign: {
         ; Registration (key generation) outputs
-        att-obj => bstr .cbor attObj,  ; Attestation object for signing key pair
         ? sig   => bstr,               ; Signature over phData input, if present
         //
         ; Authentication (signing) outputs
+        ; This choice is redundant given the one above, but is there to emphasize
+        ; that `sig` is required in authentication ceremony outputs.
         sig     => bstr,               ; Signature over phData input
         //
         ; Attestation fields
@@ -8171,11 +8201,6 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     Note: The `att-obj` entry is defined as a byte string containing CBOR-encoded data
     instead of a direct CBOR map because the [=CTAP2 canonical CBOR encoding form=] allows at most 4 levels of nested CBOR structures.
-
-    :   att-obj
-    ::  An [=attestation object=] for the signing key pair.
-        MUST be present in [=registration ceremonies=].
-        MUST NOT be present in [=authentication ceremonies=].
 
     :   sig
     ::  A signature over the extension input `phData`, if present, by the signing private key.
@@ -8191,6 +8216,25 @@ where neither the signing key pair nor the associated [=credential=] need to con
         - If `unattended` (`0b000`), signatures do not require [=user presence=] or [=user verification=].
         - If `require-up` (`0b001`), signatures require [=user verification=] but do not require [=user presence=].
         - If `require-uv` (`0b101`), signatures require [=user presence=] and [=user verification=].
+
+    The [=unsigned extension output=] is a CBOR map with the structure of the following CDDL:
+
+    ```
+    ; The symbolic names on the left are represented in CBOR by the integers on the right
+    att-obj = 7
+
+    $$unsignedExtensionOutput //= (
+      sign: {
+        ; Registration (key generation) outputs
+        att-obj => bstr .cbor attObj,  ; Attestation object for signing key pair
+      },
+    )
+    ```
+    :   att-obj
+    ::  An [=attestation object=] for the signing key pair.
+
+    Note that [=unsigned extension output=] is only present in [=registration ceremonies=].
+
 
 #### Constructing a key handle from a COSE_Key #### {#sctn-sign-extension-key-handle-from-cose-key}
 
@@ -8260,6 +8304,7 @@ To decode |kid|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, per
 - Version 2 (in progress)
     - Published: TBD
     - Changed error code when `allowList` is empty
+    - Moved `att-obj` from authenticator data to unsigned extension outputs and client extension outputs
 
 - Version 1
     - Published: 2024-09-11
