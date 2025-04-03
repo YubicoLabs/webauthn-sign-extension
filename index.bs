@@ -247,6 +247,7 @@ spec: RFC8610; urlPrefix: https://tools.ietf.org/html/rfc8610
 <pre class="link-defaults">
 spec:credential-management; type:dfn; text:credentials
 spec:dom; type:dfn; for:/; text:document
+spec:html; type:dfn; text:allowed to use
 spec:html; type:dfn; for:environment settings object; text:global object
 spec:html; type:dfn; for:/; text:same site
 spec:infra; type:dfn; for:/; text:set
@@ -506,9 +507,13 @@ The sample code for generating and registering a new key follows:
         displayName: "Alex Müller",
       },
 
-      // This Relying Party will accept either an ES256 or RS256 credential, but
-      // prefers an ES256 credential.
+      // This Relying Party will accept either an EdDSA, ES256 or RS256 credential, but
+      // prefers an EdDSA credential.
       pubKeyCredParams: [
+        {
+          type: "public-key",
+          alg: -8 // "EdDSA" as registered in the IANA COSE Algorithms registry
+        },
         {
           type: "public-key",
           alg: -7 // "ES256" as registered in the IANA COSE Algorithms registry
@@ -705,7 +710,7 @@ credential registration operation. A similar procedure applies to an authenticat
         .then(function (attestation) {
             // Register the user.
         }).catch(function (error) {
-            if (error == "AbortError") {
+            if (error.name === "AbortError") {
                 // Inform user the credential hasn't been created.
                 // Let the server know a key hasn't been created.
             }
@@ -2250,7 +2255,7 @@ decline the entire interaction even if a [=public key credential source=] is pre
 [=credential=].
 
 The {{CredentialsContainer/get()|navigator.credentials.get()}} implementation [[!CREDENTIAL-MANAGEMENT-1]] calls
-<code>PublicKeyCredential.{{PublicKeyCredential/[[CollectFromCredentialStore]]()}}</code> to collect any [=credentials=] that
+<code>PublicKeyCredential.{{Credential/[[CollectFromCredentialStore]]()}}</code> to collect any [=credentials=] that
 should be available without [=user mediation=] (roughly, this specification's [=authorization gesture=]), and if it does not find
 exactly one of those, it then calls <code>PublicKeyCredential.{{PublicKeyCredential/[DISCOVER-METHOD]}}</code> to have
 the user select a [=public key credential source=].
@@ -2484,7 +2489,7 @@ When this method is invoked, the user agent MUST execute the following algorithm
 
                     1. Set <code>|publicKeyOptions|.{{PublicKeyCredentialRequestOptions/allowCredentials}}</code> to be a [=list=] containing a
                         single {{PublicKeyCredentialDescriptor}} [=list/item=] whose {{PublicKeyCredentialDescriptor/id}}'s value is set to
-                        |credentialMetadata|'s [=DiscoverableCredentialMetadata/id=]'s value and whose{{PublicKeyCredentialDescriptor/id}}
+                        |credentialMetadata|'s [=DiscoverableCredentialMetadata/id=]'s value and whose {{PublicKeyCredentialDescriptor/type}}
                         value is set to |credentialMetadata|'s [=DiscoverableCredentialMetadata/type=].
 
                     1. Execute the [=issuing a credential request to an authenticator=] algorithm with |authenticator|, |savedCredentialIds|,
@@ -7476,7 +7481,7 @@ Note: This extension may be implemented for [=authenticators=] that do not use [
 
     <div dfn-type="dict-member" dfn-for="AuthenticationExtensionsPRFOutputs">
         :   <dfn>enabled</dfn>
-        ::  [TRUE] if, and only if, the one or two PRFs are available for use with the created credential. This is only reported during [=registration=] and is not present in the case of [=authentication=].
+        ::  [TRUE] if, and only if, the PRF is available for use with the created credential. This is only reported during [=registration=] and is not present in the case of [=authentication=].
 
         :   <dfn>results</dfn>
         ::  The results of evaluating the PRF for the inputs given in {{AuthenticationExtensionsPRFInputs/eval}} or {{AuthenticationExtensionsPRFInputs/evalByCredential}}. Outputs may not be available during [=registration=]; see comments in {{AuthenticationExtensionsPRFInputs/eval}}.
