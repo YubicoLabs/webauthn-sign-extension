@@ -7595,7 +7595,7 @@ However, [=authenticators=] that do not utilize [[!FIDO-CTAP]] do not necessaril
 This section defines extensions that are both [=client extensions=] and [=authenticator extensions=].
 
 
-### Signing extension (<dfn for="extension">sign</dfn>) version 2-SNAPSHOT ### {#sctn-sign-extension}
+### Signing extension (`sign`) version 2-SNAPSHOT ### {#sctn-sign-extension}
 
 This [=authenticator extension|authenticator=] [=registration extension=] and [=authentication extension=]
 allows a [=[RP]=] to sign arbitrary data using an asymmetric key pair associated with a [=credential=]
