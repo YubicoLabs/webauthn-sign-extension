@@ -7746,14 +7746,10 @@ where neither the signing key pair nor the associated [=credential=] need to con
             to retrieve or re-derive the signing private key.
             If not, the [=authentication ceremony=] fails.
 
-            A suitable [=map/value=] for this record MAY be retrieved from the [=client extension output=]
-            <code>{{AuthenticationExtensionsSignOutputs/generatedKey}}.{{AuthenticationExtensionsSignGeneratedKey/keyHandle}}</code>.
-            Alternatively, if the [=[RP]=] needs [=attestation=] for the signing key pair,
-            the [=[RP]=] MUST instead verify the [=attestation object=]
-            returned as the [=client extension output=]
-            <code>{{AuthenticationExtensionsSignOutputs/generatedKey}}.{{AuthenticationExtensionsSignGeneratedKey/attestationObject}}</code>
-            and construct the [=signing key handle=] from
-            <code>{{AuthenticationExtensionsSignOutputs/generatedKey}}.{{AuthenticationExtensionsSignGeneratedKey/attestationObject}}["authData"].[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialPublicKey=]</code>
+            A suitable [=map/value=] for this record MAY be constructed
+            from the [=client extension outputs=]
+            <code>{{AuthenticationExtensionsSignOutputs/generatedKey}}.{{AuthenticationExtensionsSignGeneratedKey/publicKey}}</code>
+            and <code>{{AuthenticationExtensionsSignOutputs/generatedKey}}.{{AuthenticationExtensionsSignGeneratedKey/algorithm}}</code>
             using the procedure to [=extension/sign/construct a key handle from a COSE_Key=]
             defined in [[#sctn-sign-extension-key-handle-from-cose-key]].
     </div>
@@ -7802,13 +7798,8 @@ where neither the signing key pair nor the associated [=credential=] need to con
             - {{AuthenticationExtensionsSignGeneratedKey/publicKey}}:
                 An {{ArrayBuffer}} containing a copy of |pkBytes|.
 
-            - {{AuthenticationExtensionsSignGeneratedKey/keyHandle}}:
-                An {{ArrayBuffer}} constructed as follows:
-
-                1. Let |pk| be |pkBytes| parsed as a CBOR map.
-                1. Let {{AuthenticationExtensionsSignGeneratedKey/keyHandle}} be an {{ArrayBuffer}}
-                    containing the result of [=extension/sign/constructing a key handle from a COSE_Key=]
-                    given the COSE_Key structure |pk|.
+            - {{AuthenticationExtensionsSignGeneratedKey/algorithm}}:
+                A copy of <code>|authData|.[=authData/extensions=]["sign"][alg]</code>.
 
             - {{AuthenticationExtensionsSignGeneratedKey/attestationObject}}:
                 An {{ArrayBuffer}} constructed as follows:
@@ -7915,7 +7906,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
     <xmp class="idl">
     dictionary AuthenticationExtensionsSignGeneratedKey {
         required ArrayBuffer publicKey;
-        required ArrayBuffer keyHandle;
+        required COSEAlgorithmIdentifier algorithm;
         required ArrayBuffer attestationObject;
     };
     </xmp>
@@ -7930,15 +7921,12 @@ where neither the signing key pair nor the associated [=credential=] need to con
             conveyed in the [=attestation object=] of the associated credential,
             after verifying both [=attestation objects=].
 
-        :   <dfn>keyHandle</dfn>
-        ::  The [=signing key handle=], a byte array encoding a COSE_Key_Ref structure [[!I-D.cose-2p-algs]] referencing the generated signing private key.
-            The [=[RP]=] MUST store this in order to later set it as one of the values in the
-            <code>{{AuthenticationExtensionsSignInputs/sign}}.{{AuthenticationExtensionsSignSignInputs/keyHandleByCredential}}</code>
-            input to request generation of a signature.
+        :   <dfn>algorithm</dfn>
+        ::  The algorithm identifier chosen from the {{AuthenticationExtensionsSignGenerateKeyInputs/algorithms}} input argument.
+            The RP MAY use this when constructing a COSE_Key_Ref structure [[!I-D.cose-2p-algs]]referencing the generated signing private key.
 
             This member is intended for use by [=[RPS]=] that do not request [=attestation=].
-            [=[RPS]=] that request attestation SHOULD instead construct key handles
-            as described for the [=client extension input=] {{AuthenticationExtensionsSignSignInputs/keyHandleByCredential}}.
+            [=[RPS]=] that request attestation SHOULD instead retrieve the value from the [=authenticator extension outputs=].
 
         :   <dfn>attestationObject</dfn>
         ::  An [=attestation object=] for the generated public key.
@@ -8074,6 +8062,8 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     1. Set <code>|authData|.[=authData/extensions=]["sign"]</code> to a new CBOR map with the entries:
 
+        - `alg`: |chosenAlg|.
+
         - `sig`: The result of signing <code>|extensions|["sign"][phData]</code>, if present, using private key |p|,
             if |chosenAlg| supports signing during registration.
             Otherwise omit this entry.
@@ -8168,13 +8158,15 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     ```
     ; The symbolic names on the left are represented in CBOR by the integers on the right
+    alg = 3
     flags = 4
     sig = 6
 
     $$extensionOutput //= (
       sign: {
         ; Registration (key generation) outputs
-        ? sig   => bstr,               ; Signature over phData input, if present
+        alg     => COSEAlgorithmIdentifier   ; Algorithm chosen from alg input
+        ? sig   => bstr,                     ; Signature over phData input, if present
         //
         ; Authentication (signing) outputs
         ; This choice is redundant given the one above, but is there to emphasize
@@ -8191,6 +8183,11 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     Note: The `att-obj` entry is defined as a byte string containing CBOR-encoded data
     instead of a direct CBOR map because the [=CTAP2 canonical CBOR encoding form=] allows at most 4 levels of nested CBOR structures.
+
+    :   alg
+    ::  The {{COSEAlgorithmIdentifier}} for the signature algorithm chosen from the `alg` input.
+        MUST be present in [=registration ceremonies=].
+        MUST NOT be present in [=authentication ceremonies=].
 
     :   sig
     ::  A signature over the extension input `phData`, if present, by the signing private key.
@@ -8229,11 +8226,16 @@ where neither the signing key pair nor the associated [=credential=] need to con
 #### Constructing a key handle from a COSE_Key #### {#sctn-sign-extension-key-handle-from-cose-key}
 
 To <dfn for="extension/sign">construct a key handle from a COSE_Key</dfn>
-given a COSE_Key structure |coseKey|,
-a [=[RP]=] or [=client=] proceeds as follows:
+given a COSE_Key structure |coseKey| and a COSEAlgorithmIdentifier |alg|,
+perform the following steps:
 
 1. Let |keyHandle| be a copy of |coseKey|.
 1. Remove all entries from |keyHandle| whose key is not one of `kty`, `kid` or `alg`.
+1. Set <code>|keyHandle|[`kty`]</code> to the COSE Key Reference type
+    corresponding to the current value of <code>|keyHandle|[`kty`]</code> [[!I-D.cose-2p-algs]].
+1. Set <code>|keyHandle|[`alg`]</code> to |alg|.
+1. Add any other parameters required for the COSE Key Reference type,
+    as specified by the definition of the COSE Key Reference type.
 1. Return |keyHandle| encoded in CBOR.
 
 The CBOR map keys `kty`, `kid` and `alg` are aliases defined above
@@ -8297,6 +8299,8 @@ To decode |kid|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, per
     - Moved `att-obj` from authenticator data to unsigned extension outputs and client extension outputs
     - Changed `key-refs: [+ bstr]` authenticator input to single `key-ref: bstr`
     - Reference [[I-D.cose-2p-algs]] instead of ARKG for definition of COSE_Key_Ref
+    - Deleted `generatedKey.keyHandle` client extension output
+    - Added `alg` authenticator output and `generatedKey.algorithm` client output
 
 - Version 1
     - Published: 2024-09-11
