@@ -7941,35 +7941,30 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     ```
     ; The symbolic names on the left are represented in CBOR by the integers on the right
-    tbs = 0
     kty = 1
     kid = 2
     alg = 3
     flags = 4
     key-ref = 5
+    tbs = 6
 
     $$extensionInput //= (
       sign: {
         ; Registration (key generation) input
-        ? tbs      => bstr,
         alg        => [ + COSEAlgorithmIdentifier ],
         ? flags    => &(unattended: 0b000,
                         require-up: 0b001,
                         require-uv: 0b101) .default 0b001,
+        ? tbs      => bstr,
         //
         ; Authentication (signing) input
-        tbs        => bstr,
         key-ref    => bstr .cbor COSE_Key_Ref,
+        tbs        => bstr,
       },
     )
     ```
 
     The CDDL type `COSE_Key_Ref` is defined in [[!I-D.cose-2p-algs]].
-
-    :   tbs
-    ::  The data to be signed.
-        MAY be present during [=registration ceremonies=].
-        MUST be present during [=authentication ceremonies=].
 
     :   alg
     ::  A list of acceptable signature algorithms, ordered from most preferred to least preferred.
@@ -8003,6 +7998,11 @@ where neither the signing key pair nor the associated [=credential=] need to con
         given the [=unsigned extension outputs=] as |unsignedExtOutputs|,
         using the procedure to [=extension/sign/construct a key handle from a COSE_Key=]
         defined in [[#sctn-sign-extension-key-handle-from-cose-key]].
+
+    :   tbs
+    ::  The data to be signed.
+        MAY be present during [=registration ceremonies=].
+        MUST be present during [=authentication ceremonies=].
 
     Note: The `key-ref` entry is defined as a byte string containing CBOR-encoded data
     instead of a direct CBOR map because the [=CTAP2 canonical CBOR encoding form=] allows at most 4 levels of nested CBOR structures.
@@ -8285,6 +8285,7 @@ To decode |kid|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, per
     - Renamed `phData` input to `tbs`
     - Removed  assumption of `tbs` being pre-hashed by the RP; this may instead be signaled
         using distinct COSEAlgorithmIdentifier values in the `generateKey.algorithms` input.
+    - Changed CBOR alias `tbs = 0` (previously `phData = 0`) to `tbs = 6`
 
 - Version 1
     - Published: 2024-09-11
