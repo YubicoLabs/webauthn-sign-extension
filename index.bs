@@ -7607,7 +7607,9 @@ The signing private key is held exclusively by the [=authenticator=].
 The high-level usage flow is as follows:
 
 1. To create a signing key pair, the [=[RP]=] initiates a [=registration ceremony=] and requests the extension.
-    The [=authenticator=] returns a signing public key and a <dfn>signing key handle</dfn> for the key pair.
+    The [=authenticator=] returns a signing public key.
+
+1. The [=[RP]=] uses the signing public key to construct a <dfn>signing key handle</dfn> for the key pair.
 
 1. To sign some chosen data, the [=[RP]=] initiates an [=authentication ceremony=] and requests the extension
     with one or more [=signing key handles=] for key pairs eligible to perform the signature.
