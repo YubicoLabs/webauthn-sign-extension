@@ -6,9 +6,9 @@ Notes:
   tags will be rendered. It also has the spec 'Level' value (gratuitously) appended.
 -->
 
-<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 2</h1>
+<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 3</h1>
 <pre class='metadata'>
-Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 2
+Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 3
 Status: ED
 Prepare for TR: false
 ED: https://w3c.github.io/webauthn/
@@ -8278,7 +8278,7 @@ To decode |kid|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, per
 [INFORMATIVE]
 
 - Version 3
-    - Published: TBD
+    - Published: 2025-05-19
     - Client: Fixed CBOR map key in reference to authenticator data embedded in unsigned extension output.
     - Editorial and formatting fixes.
 
