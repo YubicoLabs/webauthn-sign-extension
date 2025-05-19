@@ -7795,7 +7795,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
                 as a byte array.
 
             1. Set {{AuthenticationExtensionsSignOutputs/generatedKey}}
-                to a {{AuthenticationExtensionsSignGeneratedKey}} value with the members:
+                to an {{AuthenticationExtensionsSignGeneratedKey}} value with the members:
 
             - {{AuthenticationExtensionsSignGeneratedKey/publicKey}}:
                 An {{ArrayBuffer}} containing a copy of |pkBytes|.
@@ -8280,6 +8280,7 @@ To decode |kid|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, per
 - Version 3
     - Published: TBD
     - Client: Fixed CBOR map key in reference to authenticator data embedded in unsigned extension output.
+    - Editorial fixes.
 
 - Version 2
     - Published: 2025-04-07
