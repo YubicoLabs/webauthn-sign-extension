@@ -7797,22 +7797,22 @@ where neither the signing key pair nor the associated [=credential=] need to con
             1. Set {{AuthenticationExtensionsSignOutputs/generatedKey}}
                 to an {{AuthenticationExtensionsSignGeneratedKey}} value with the members:
 
-            - {{AuthenticationExtensionsSignGeneratedKey/publicKey}}:
-                An {{ArrayBuffer}} containing a copy of |pkBytes|.
+                - {{AuthenticationExtensionsSignGeneratedKey/publicKey}}:
+                    An {{ArrayBuffer}} containing a copy of |pkBytes|.
 
-            - {{AuthenticationExtensionsSignGeneratedKey/algorithm}}:
-                A copy of <code>|authData|.[=authData/extensions=]["sign"][alg]</code>.
+                - {{AuthenticationExtensionsSignGeneratedKey/algorithm}}:
+                    A copy of <code>|authData|.[=authData/extensions=]["sign"][alg]</code>.
 
-            - {{AuthenticationExtensionsSignGeneratedKey/attestationObject}}:
-                An {{ArrayBuffer}} constructed as follows:
+                - {{AuthenticationExtensionsSignGeneratedKey/attestationObject}}:
+                    An {{ArrayBuffer}} constructed as follows:
 
-                1. Let |origAttObj| be <code>|unsignedExtOutputs|["sign"][att-obj]</code> parsed as a CBOR map.
-                1. Let |newAttObj| be an empty CBOR map.
-                1. Set <code>|newAttObj|["fmt"]</code> to <code>|origAttObj|[1]</code>.
-                1. Set <code>|newAttObj|["authData"]</code> to <code>|origAttObj|[2]</code>.
-                1. Set <code>|newAttObj|["attStmt"]</code> to <code>|origAttObj|[3]</code>.
-                1. Set {{AuthenticationExtensionsSignGeneratedKey/attestationObject}} to an {{ArrayBuffer}}
-                    containing |newAttObj| encoded in CBOR.
+                    1. Let |origAttObj| be <code>|unsignedExtOutputs|["sign"][att-obj]</code> parsed as a CBOR map.
+                    1. Let |newAttObj| be an empty CBOR map.
+                    1. Set <code>|newAttObj|["fmt"]</code> to <code>|origAttObj|[1]</code>.
+                    1. Set <code>|newAttObj|["authData"]</code> to <code>|origAttObj|[2]</code>.
+                    1. Set <code>|newAttObj|["attStmt"]</code> to <code>|origAttObj|[3]</code>.
+                    1. Set {{AuthenticationExtensionsSignGeneratedKey/attestationObject}} to an {{ArrayBuffer}}
+                        containing |newAttObj| encoded in CBOR.
 
         - {{AuthenticationExtensionsSignOutputs/signature}}:
             The [=authenticator extension output=] <code>|authData|.[=authData/extensions=]["sign"][sig]</code>
@@ -8280,7 +8280,7 @@ To decode |kid|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, per
 - Version 3
     - Published: TBD
     - Client: Fixed CBOR map key in reference to authenticator data embedded in unsigned extension output.
-    - Editorial fixes.
+    - Editorial and formatting fixes.
 
 - Version 2
     - Published: 2025-04-07
