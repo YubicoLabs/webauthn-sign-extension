@@ -7595,7 +7595,7 @@ However, [=authenticators=] that do not utilize [[!FIDO-CTAP]] do not necessaril
 This section defines extensions that are both [=client extensions=] and [=authenticator extensions=].
 
 
-### Signing extension (`sign`) version 2 ### {#sctn-sign-extension}
+### Signing extension (`sign`) version 3 ### {#sctn-sign-extension}
 
 This [=authenticator extension|authenticator=] [=registration extension=] and [=authentication extension=]
 allows a [=[RP]=] to sign arbitrary data using an asymmetric key pair associated with a [=credential=]
@@ -7790,7 +7790,8 @@ where neither the signing key pair nor the associated [=credential=] need to con
             An {{AuthenticationExtensionsSignGeneratedKey}} value constructed as follows:
 
             1. Let |origAttObj| be <code>|unsignedExtOutputs|["sign"][att-obj]</code> parsed as a CBOR map.
-            1. Let |pkBytes| be a copy of <code>|origAttObj|["authData"].[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialPublicKey=]</code>
+            1. Let |innerAuthData| be <code>|origAttObj|[2]</code> parsed as an [=authenticator data=] structure.
+            1. Let |pkBytes| be a copy of <code>|innerAuthData|.[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialPublicKey=]</code>
                 as a byte array.
 
             1. Set {{AuthenticationExtensionsSignOutputs/generatedKey}}
@@ -8275,6 +8276,10 @@ To decode |kid|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, per
 #### Revision History #### {#sctn-sign-extension-history}
 
 [INFORMATIVE]
+
+- Version 3
+    - Published: TBD
+    - Client: Fixed CBOR map key in reference to authenticator data embedded in unsigned extension output.
 
 - Version 2
     - Published: 2025-04-07
