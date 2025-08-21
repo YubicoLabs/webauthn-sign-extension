@@ -6,9 +6,10 @@ Notes:
   tags will be rendered. It also has the spec 'Level' value (gratuitously) appended.
 -->
 
-<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 4-SNAPSHOT</h1>
+<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 4-SNAPSHOT-2025-08-21T15:00</h1>
+2025-08-21T14:50
 <pre class='metadata'>
-Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 4-SNAPSHOT
+Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 4-SNAPSHOT-2025-08-21T15:00
 Status: ED
 Prepare for TR: false
 ED: https://w3c.github.io/webauthn/
@@ -7715,7 +7716,7 @@ However, [=authenticators=] that do not utilize [[!FIDO-CTAP]] do not necessaril
 This section defines extensions that are both [=client extensions=] and [=authenticator extensions=].
 
 
-### Signing extension (`previewSign`) version 4-SNAPSHOT ### {#sctn-sign-extension}
+### Signing extension (`previewSign`) version 4-SNAPSHOT-2025-08-21T15:00 ### {#sctn-sign-extension}
 
 This [=authenticator extension|authenticator=] [=registration extension=] and [=authentication extension=]
 allows a [=[RP]=] to sign arbitrary data using an asymmetric key pair associated with a [=credential=]
@@ -8385,7 +8386,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 [INFORMATIVE]
 
 - Version 4
-    - Published: TBD
+    - Published: TBD, current snapshot 2025-08-21T15:00
     - Changed extension identifier to `previewSign` in preparation for broader prototype availability.
     - Changed authenticator error from `CTAP2_ERR_INVALID_CREDENTIAL` to `CTAP2_ERR_UNSUPPORTED_ALGORITHM`
         when no supported algorithm is found during registration.
