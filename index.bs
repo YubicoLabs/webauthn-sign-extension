@@ -7,7 +7,6 @@ Notes:
 -->
 
 <h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 4-SNAPSHOT-2025-08-21T15:00</h1>
-2025-08-21T14:50
 <pre class='metadata'>
 Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 4-SNAPSHOT-2025-08-21T15:00
 Status: ED
