@@ -8247,7 +8247,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     1. If the [=authData/flags/UV=] bit is set in |signFlags| but not in <code>|authData|.[=authData/flags=]</code>,
         return an error code equivalent to "{{ConstraintError}}" and terminate the operation.
-        Implementations in [[FIDO-CTAP]] return the error code`CTAP2_ERR_PUAT_REQUIRED`.
+        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_PUAT_REQUIRED`.
 
     1. Use |signFlags|, |auxIkm|, and a per-credential authenticator secret
         as the seeds to deterministically re-generate the key pair with private key |p| and public key |P|
@@ -8383,6 +8383,10 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 #### Revision History #### {#sctn-sign-extension-history}
 
 [INFORMATIVE]
+
+- Version 5
+    - Published: TBD
+    - Editorial and formatting fixes.
 
 - Version 4
     - Published: 2025-08-26
