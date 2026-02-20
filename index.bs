@@ -6,9 +6,9 @@ Notes:
   tags will be rendered. It also has the spec 'Level' value (gratuitously) appended.
 -->
 
-<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 4</h1>
+<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 5-SNAPSHOT</h1>
 <pre class='metadata'>
-Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 4
+Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 5-SNAPSHOT
 Status: ED
 Prepare for TR: false
 ED: https://w3c.github.io/webauthn/
@@ -7715,7 +7715,7 @@ However, [=authenticators=] that do not utilize [[!FIDO-CTAP]] do not necessaril
 This section defines extensions that are both [=client extensions=] and [=authenticator extensions=].
 
 
-### Signing extension (`previewSign`) version 4 ### {#sctn-sign-extension}
+### Signing extension (`previewSign`) version 5-SNAPSHOT ### {#sctn-sign-extension}
 
 This [=authenticator extension|authenticator=] [=registration extension=] and [=authentication extension=]
 allows a [=[RP]=] to sign arbitrary data using an asymmetric key pair associated with a [=credential=]
@@ -8247,7 +8247,8 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     1. If the [=authData/flags/UV=] bit is set in |signFlags| but not in <code>|authData|.[=authData/flags=]</code>,
         return an error code equivalent to "{{ConstraintError}}" and terminate the operation.
-        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_PUAT_REQUIRED`.
+        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_PUAT_REQUIRED`
+        or `CTAP2_ERR_UV_INVALID` as appropriate for the authenticator.
 
     1. Use |signFlags|, |auxIkm|, and a per-credential authenticator secret
         as the seeds to deterministically re-generate the key pair with private key |p| and public key |P|
@@ -8386,6 +8387,8 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 
 - Version 5
     - Published: TBD
+    - Error code `CTAP2_ERR_UV_INVALID` may now be returned as alternative to `CTAP2_ERR_PUAT_REQUIRED`
+        when signing key UV requirement is not satisfied.
     - Editorial and formatting fixes.
 
 - Version 4
