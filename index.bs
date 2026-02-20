@@ -7915,11 +7915,11 @@ where neither the signing key pair nor the associated [=credential=] need to con
             return a {{DOMException}} whose name is “{{NotSupportedError}}”.
 
         1. If <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/allowCredentials}}</code> [=list/is empty=],
-            return a {{DOMException}} whose name is “{{NotSupportedError}}”.
+            return a {{DOMException}} whose name is “{{DataError}}”.
 
         1. If the [=map/size=] of <code>|extSign|.{{AuthenticationExtensionsSignInputs/signByCredential}}</code>
             does not equal the [=list/size=] of <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/allowCredentials}}</code>,
-            return a {{DOMException}} whose name is “{{NotSupportedError}}”.
+            return a {{DOMException}} whose name is “{{DataError}}”.
 
         1. [=list/For each=] |allowedCredential| in <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/allowCredentials}}</code>:
 
@@ -8013,6 +8013,11 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
         - {{AuthenticationExtensionsSignOutputs/generatedKey}}: |generatedKeyResult| if not null, otherwise omit this member.
         - {{AuthenticationExtensionsSignOutputs/signature}}: |signatureResult| if not null, otherwise omit this member.
+        - {{AuthenticationExtensionsSignOutputs/errorCode}}:
+            <code>|authData|.[=authData/extensions=]["previewSign"][err]</code> if present, otherwise omit this member.
+
+            The CBOR map key `err` is an aliase of an integer value,
+            defined below in the CDDL for the [=authenticator extension output=].
 
 
 : Client extension output
@@ -8024,6 +8029,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
     dictionary AuthenticationExtensionsSignOutputs {
         AuthenticationExtensionsSignGeneratedKey generatedKey;
         ArrayBuffer                              signature;
+        unsigned long                            errorCode;
     };
     </xmp>
 
@@ -8048,6 +8054,14 @@ where neither the signing key pair nor the associated [=credential=] need to con
             Note that both {{AuthenticationExtensionsSignOutputs/generatedKey}} and {{AuthenticationExtensionsSignOutputs/signature}}
             MAY be absent if the {{AuthenticationExtensionsSignOutputs/generatedKey}} input was not present
             and no eligible input was found in {{AuthenticationExtensionsSignInputs/signByCredential}}.
+
+        :   <dfn>errorCode</dfn>
+        ::  An error code, whose values are defined below in the CDDL for the [=authenticator extension outputs=].
+            MAY be present in both [=registration ceremony|registration=] and [=authentication ceremonies=],
+            in which case it is the only member present.
+
+            This communicates error conditions from the [=authenticator=] that only the [=[RP]=] can resolve,
+            and appears only when the [=client extension input=] is otherwise well-formed.
     </div>
 
     <xmp class="idl">
@@ -8194,25 +8208,28 @@ where neither the signing key pair nor the associated [=credential=] need to con
     of the [=authenticatorMakeCredential=] or [=authenticatorGetAssertion=] operation,
     and the |attestationFormat| and |enterpriseAttestationPossible| variables in the [=authenticatorMakeCredential=] operation.
 
+    Extension outputs for error conditions are denoted as CDDL using key and value aliases
+    defined below in the CDDL for the [=authenticator extension output=].
+
     1. Let |extInput| denote <code>|extensions|["previewSign"]</code>.
 
     1. If the authenticator operation is [=authenticatorMakeCredential=] and <code>|extInput|[alg]</code> is not present,
-        return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
-        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
+        set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+        to `{ err => missing-param-alg }` and abort these extension processing steps.
 
     1. If <code>|extInput|[flags]</code> is present and <code>|extInput|[alg]</code> is not present,
-        return an error code equivalent to "{{DataError}}" and terminate these processing steps.
-        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
+        set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+        to `{ err => missing-param-alg }` and abort these extension processing steps.
 
     1. If <code>|extInput|[kh]</code>, <code>|extInput|[tbs]</code> or <code>|extInput|[args]</code> is present:
 
         1. If the current authenticator operation is not [=authenticatorGetAssertion=],
-            return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
-            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
+            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            to `{ err => invalid-registration-operation }` and abort these extension processing steps.
 
         1. If <code>|extInput|[kh]</code> is not present or <code>|extInput|[tbs]</code> is not present,
-            return an error code equivalent to "{{UnknownError}}" and terminate these processing steps.
-            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
+            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            to `{ err => missing-param-kh-tbs }` and abort these extension processing steps.
 
     1. Let |authData| denote the [=authenticator data=] that will be returned
         from the [=authenticatorMakeCredential=] or [=authenticatorGetAssertion=] operation.
@@ -8232,8 +8249,8 @@ where neither the signing key pair nor the associated [=credential=] need to con
                 let |chosenAlg| be |candidateAlg| and [=break=].
 
         1. If |chosenAlg| is null,
-            return an error code equivalent to "{{NotSupportedError}}" and terminate the operation.
-            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_UNSUPPORTED_ALGORITHM`.
+            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            to `{ err => unsupported-algorithm }` and abort these extension processing steps.
 
         1. Let |signFlags| be the value of <code>|extInput|[flags]</code>.
 
@@ -8295,11 +8312,14 @@ where neither the signing key pair nor the associated [=credential=] need to con
     1. If <code>|extInput|[kh]</code> or <code>|extInput|[tbs]</code> is present:
 
         1. If |allowCredentialDescriptorList| is empty,
-            return an error code equivalent to "{{NotAllowedError}}" and terminate these processing steps.
-            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
+            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            to `{ err => missing-param-allow-list }` and abort these extension processing steps.
 
         1. Decode the authenticator-specific encoding of <code>|extInput|[kh]</code> to extract the encoded |chosenAlg|, |signFlags| and |auxIkm|.
             This procedure SHOULD verify integrity to ensure that <code>|extInput|[kh]</code> was generated by this authenticator.
+            If decoding or integrity check fails,
+            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            to `{ err => invalid-key-handle }` and abort these extension processing steps.
 
             An example implementation of this decoding is given in [[#sctn-sign-extension-example-key-handle-encoding]].
 
@@ -8307,13 +8327,22 @@ where neither the signing key pair nor the associated [=credential=] need to con
             let |args| be <code>|extInput|[args]</code> decoded as a COSE_Sign_Args structure [[!I-D.cose-2p-algs]].
             Otherwise let |args| be null.
 
-        1. If |args| is not null and <code>|args|[alg]</code> is not present or does not equal |chosenAlg|,
-            return an error code equivalent to "{{NotSupportedError}}" and terminate the operation.
-            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_CREDENTIAL`.
+            If decoding fails,
+            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            to `{ err => cose-sign-args-invalid }` and abort these extension processing steps.
 
-        1. If |args| is null and the signing algorithm identified by |chosenAlg| requires additional arguments,
-            return an error code equivalent to "{{DataError}}" and terminate these processing steps.
-            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
+        1. If |args| is not null and <code>|args|[alg]</code> is not present or does not equal |chosenAlg|,
+            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            to `{ err => cose-sign-args-alg-mismatch }` and abort these extension processing steps.
+
+        1. If the signing algorithm identified by |chosenAlg| requires additional arguments
+            and |args| is null or does not include all required additional arguments,
+            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            to `{ err => cose-sign-args-missing-param }` and abort these extension processing steps.
+
+        1. If |args| contains unknown parameters or parameters not applicable to the algorithm identified by |chosenAlg|,
+            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            to `{ err => cose-sign-args-unknown-param }` and abort these extension processing steps.
 
         1. If the [=authData/flags/UP=] bit is set in |signFlags| but not in <code>|authData|.[=authData/flags=]</code>,
             return an error code equivalent to "{{ConstraintError}}" and terminate the operation.
@@ -8353,33 +8382,54 @@ where neither the signing key pair nor the associated [=credential=] need to con
     alg = 3
     flags = 4
     sig = 6
+    err = -1
 
     $$extensionOutput //= (
       previewSign: {
         ; Registration or authentication outputs
-        alg     => COSEAlgorithmIdentifier   ; Algorithm chosen from alg input
+        alg     => COSEAlgorithmIdentifier,  ; Algorithm chosen from alg input
         //
         ; Authentication outputs
-        ? alg   => COSEAlgorithmIdentifier   ; Algorithm chosen from alg input if present
+        ? alg   => COSEAlgorithmIdentifier,  ; Algorithm chosen from alg input if present
         sig     => bstr,                     ; Signature over tbs input
+        //
+        ; Error output
+        err     => previewSignError,
         //
         ; Attestation fields
         flags   => &(unattended: 0b000,
                      require-up: 0b001,
-                     require-uv: 0b101)
+                     require-uv: 0b101),
       },
+    )
+
+    previewSignError = &(
+      missing-param-alg: 1,
+      invalid-registration-operation: 2,
+      missing-param-kh-tbs: 3,
+      unsupported-algorithm: 4,
+      missing-param-allow-list: 5,
+      invalid-key-handle: 6,
+      cose-sign-args-invalid: 7,
+      cose-sign-args-alg-mismatch: 8,
+      cose-sign-args-missing-param: 9,
+      cose-sign-args-unknown-param: 10,
     )
     ```
 
     :   alg
     ::  The {{COSEAlgorithmIdentifier}} for the signature algorithm chosen from the `alg` input.
-        MUST be present in [=registration ceremonies=].
-        MAY be present in [=authentication ceremonies=].
+        MUST be present in [=registration ceremonies=] unless `err` is present.
+        MAY be present in [=authentication ceremonies=] unless `err` is present.
 
     :   sig
     ::  A signature over the extension input `tbs`, if present, by the signing private key.
         MUST NOT be present in [=registration ceremonies=].
-        MAY be present in [=authentication ceremonies=].
+        MAY be present in [=authentication ceremonies=] unless `err` is present.
+
+    :   err
+    ::  An error code. Present if and only extension processing failed in some way.
+        MAY be present in [=registration ceremonies=] and [=authentication ceremonies=].
 
     :   flags
     ::  A copy of the `flags` input.
@@ -8407,10 +8457,52 @@ where neither the signing key pair nor the associated [=credential=] need to con
     :   att-obj
     ::  An [=attestation object=] for the signing key pair.
 
-    Note that [=unsigned extension output=] is only present if the `alg` input was present.
+    Note that [=unsigned extension output=] is present if and only if the `alg` output is present.
 
     Note: The `att-obj` entry is defined as a byte string containing CBOR-encoded data
     instead of a direct CBOR map because the [=CTAP2 canonical CBOR encoding form=] allows at most 4 levels of nested CBOR structures.
+
+
+#### Extension error names #### {#sctn-sign-extension-error-names}
+
+This extension can cause a [=registration ceremony|registration=] or [=authentication ceremony=] to fail
+with the following {{DOMException}} error names for the following reasons:
+
+<figure id="table-extension-sign-error-names" class="table">
+    <table class="complex data longlastcol">
+        <tr>
+            <th>Name</th>
+            <th>Reasons</th>
+        </tr>
+        <tr>
+            <td>{{DataError}}</td>
+            <td>
+                - {{PublicKeyCredentialRequestOptions/allowCredentials}} was empty in an [=authentication ceremony=].
+                - The [=map/size=] of {{AuthenticationExtensionsSignInputs/signByCredential}}
+                    did not equal the [=list/size=] of {{PublicKeyCredentialRequestOptions/allowCredentials}}.
+            </td>
+        </tr>
+        <tr>
+            <td>{{NotSupportedError}}</td>
+            <td>
+                - {{AuthenticationExtensionsSignInputs/generateKey}} and {{AuthenticationExtensionsSignInputs/signByCredential}}
+                    client inputs were both absent.
+                - {{AuthenticationExtensionsSignInputs/generateKey}} was absent in a [=registration ceremony=].
+                - {{AuthenticationExtensionsSignInputs/signByCredential}} was present in a [=registration ceremony=].
+            </td>
+        </tr>
+        <tr>
+            <td>{{SyntaxError}}</td>
+            <td>
+                - An [=list/item=] in {{PublicKeyCredentialRequestOptions/allowCredentials}}
+                    did not have a corresponding [=map/entry=] in {{AuthenticationExtensionsSignInputs/signByCredential}}.
+            </td>
+        </tr>
+    </table>
+    <figcaption>
+        {{DOMException}} error names and reasons for the `previewSign` extension.
+    </figcaption>
+</figure>
 
 
 #### Example key handle encoding #### {#sctn-sign-extension-example-key-handle-encoding}
@@ -8447,9 +8539,8 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
     - Secret key `K`: |macKey|
     - Input `text`: <code>|khParams| || UTF8Encode("previewSign") || |authData|.[=authData/rpIdHash=]</code>.
 
-    If not, this |kh| was generated by a different authenticator.
-    Return an error code equivalent to "{{DataError}}" and terminate the extension processing steps.
-    Implementations in [[FIDO-CTAP]] return the error code [=CTAP2_ERR_EXTENSION_SIGN_INVALID_KEY_HANDLE=].
+    If not, this |kh| was generated by a different authenticator and decoding has failed.
+    Return an error as defined in the extension processing steps.
 
 1. Parse |khParams| as a CBOR array.
 
@@ -8468,24 +8559,33 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 - Version 5
     - Published: TBD
     - Permit `generateKey` in authentication ceremonies.
-      - Client changes:
-        - Client input `signByCredential` is no longer required in authentication ceremonies, but still forbidden in registration ceremonies.
-        - At least one of client inputs `generateKey` or `signByCredential` is required in authentication ceremonies.
-        - Registration and authentication processing steps merged to one set of processing steps for both operations.
-        - Malformed authenticator outputs are now silently ignored.
-        - Client extension output is now always set, but may be empty.
-        - Ineligible `signByCredential` inputs are now silently ignored instead of aborting the extension.
-            This may now result in empty authenticator extension input.
-      - Authenticator changes:
-        - Registration and authentication processing steps merged to one set of processing steps for both operations.
-        - Authenticator inputs CDDL now allows both `alg, ?flags` and `kh, tbs, ?args` in the same input.
-            Authenticator input may now be empty in authentication ceremonies.
-        - Authenticator outputs CDDL now allows both `alg` and `sig` in the same output.
-        - Authenticator output may now be empty.
-        - Key generation is now conditioned on `alg` input and may execute in authenticatorGetAssertion.
-        - Signature generation is now conditioned on `kh` and `tbs` inputs; it is an error if exactly one of these is present.
-        - Authenticator operations now instruct to respect `attestationFormat` parameter and "take into account `enterpriseAttestationPossible`"
-            when generating signing key pairs in authenticatorMakeCredential.
+        - Client changes:
+            - Client input `signByCredential` is no longer required in authentication ceremonies, but still forbidden in registration ceremonies.
+            - At least one of client inputs `generateKey` or `signByCredential` is required in authentication ceremonies.
+            - Registration and authentication processing steps merged to one set of processing steps for both operations.
+            - Malformed authenticator outputs are now silently ignored.
+            - Client extension output is now always set, but may be empty.
+            - Ineligible `signByCredential` inputs are now silently ignored instead of aborting the extension.
+                This may now result in empty authenticator extension input.
+        - Authenticator changes:
+            - Registration and authentication processing steps merged to one set of processing steps for both operations.
+            - Authenticator inputs CDDL now allows both `alg, ?flags` and `kh, tbs, ?args` in the same input.
+                Authenticator input may now be empty in authentication ceremonies.
+            - Authenticator outputs CDDL now allows both `alg` and `sig` in the same output.
+            - Authenticator output may now be empty.
+            - Key generation is now conditioned on `alg` input and may execute in authenticatorGetAssertion.
+            - Signature generation is now conditioned on `kh` and `tbs` inputs; it is an error if exactly one of these is present.
+            - Authenticator operations now instruct to respect `attestationFormat` parameter and "take into account `enterpriseAttestationPossible`"
+                when generating signing key pairs in authenticatorMakeCredential.
+    - Changed client error names:
+        - When `allowCredentials` is empty in `get()`: `DataError` instead of `NotSupportedError`.
+        - When sizes of `allowCredentials` and `signByCredential` differ: `DataError` instead of `NotSupportedError`.
+    - Introduced `errorCode`/`err` extension output for error conditions that should be communicated back to RP.
+    - Defined authenticator error conditions that were previously implicit or missing:
+        - Failure to decode key handle
+        - Failure to decode `COSE_Sign_Args`
+        - Missing parameters in `COSE_Sign_Args`
+        - Unknown parameters in `COSE_Sign_Args`
     - Error code `CTAP2_ERR_UV_INVALID` may now be returned as alternative to `CTAP2_ERR_PUAT_REQUIRED`
         when signing key UV requirement is not satisfied.
     - Editorial and formatting fixes.
