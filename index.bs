@@ -7715,7 +7715,7 @@ However, [=authenticators=] that do not utilize [[!FIDO-CTAP]] do not necessaril
 This section defines extensions that are both [=client extensions=] and [=authenticator extensions=].
 
 
-### Signing extension (`previewSign`) version 5-SNAPSHOT ### {#sctn-sign-extension}
+### Signing extension (`previewSign5`) version 5-SNAPSHOT ### {#sctn-sign-extension}
 
 This [=authenticator extension|authenticator=] [=registration extension=] and [=authentication extension=]
 allows a [=[RP]=] to sign arbitrary data using an asymmetric key pair associated with a [=credential=]
@@ -7778,7 +7778,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
 
 : Extension identifier
-:: `previewSign`
+:: `previewSign5`
 
 : Operation applicability
 :: [=registration extension|Registration=] and [=authentication extension|authentication=]
@@ -7786,7 +7786,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
 : Client extension input
 ::  <xmp class="idl">
     partial dictionary AuthenticationExtensionsClientInputs {
-        AuthenticationExtensionsSignInputs previewSign;
+        AuthenticationExtensionsSignInputs previewSign5;
     };
 
     dictionary AuthenticationExtensionsSignInputs {
@@ -7875,9 +7875,9 @@ where neither the signing key pair nor the associated [=credential=] need to con
     In [=authentication ceremonies=], these extension processing steps instead use the variables |pkOptions| and |assertionCreationData|
     defined in [[#sctn-getAssertion]].
 
-    1. Let |extSign| denote the <code>{{AuthenticationExtensionsClientInputs/previewSign}}</code> extension input.
-        This is either <code>|pkOptions|.{{PublicKeyCredentialCreationOptions/extensions}}.{{AuthenticationExtensionsClientInputs/previewSign}}</code>
-        or <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/extensions}}.{{AuthenticationExtensionsClientInputs/previewSign}}</code>,
+    1. Let |extSign| denote the <code>{{AuthenticationExtensionsClientInputs/previewSign5}}</code> extension input.
+        This is either <code>|pkOptions|.{{PublicKeyCredentialCreationOptions/extensions}}.{{AuthenticationExtensionsClientInputs/previewSign5}}</code>
+        or <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/extensions}}.{{AuthenticationExtensionsClientInputs/previewSign5}}</code>,
         depending on the type of |pkOptions|.
 
     1. If <code>|extSign|.{{AuthenticationExtensionsSignInputs/generateKey}}</code> is not present
@@ -7951,7 +7951,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
             The CBOR map keys `kh`, `tbs` and `args` are aliases of integer values,
             defined below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
-    1. Set the `previewSign` authenticator extension input to |authenticatorInput|.
+    1. Set the `previewSign5` authenticator extension input to |authenticatorInput|.
 
     1. Wait for the [=authenticatorMakeCredential=] or [=authenticatorGetAssertion=] operation to finish successfully.
 
@@ -7964,9 +7964,9 @@ where neither the signing key pair nor the associated [=credential=] need to con
     1. Let |generatedKeyResult| be null.
     1. Let |signatureResult| be null.
 
-    1. If <code>|authData|.[=authData/extensions=]["previewSign"][alg]</code> is present:
+    1. If <code>|authData|.[=authData/extensions=]["previewSign5"][alg]</code> is present:
 
-        1. Let |origAttObj| be <code>|unsignedExtOutputs|["previewSign"][att-obj]</code> parsed as a CBOR map.
+        1. Let |origAttObj| be <code>|unsignedExtOutputs|["previewSign5"][att-obj]</code> parsed as a CBOR map.
         1. Let |signAuthData| be <code>|origAttObj|[2]</code> parsed as an [=authenticator data=] structure.
 
         1. Set |generatedKeyResult| to an {{AuthenticationExtensionsSignGeneratedKey}} value with the members:
@@ -7980,7 +7980,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
                 <code>|signAuthData|.[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialPublicKey=]</code>.
 
             - {{AuthenticationExtensionsSignGeneratedKey/algorithm}}:
-                A copy of <code>|authData|.[=authData/extensions=]["previewSign"][alg]</code>.
+                A copy of <code>|authData|.[=authData/extensions=]["previewSign5"][alg]</code>.
 
             - {{AuthenticationExtensionsSignGeneratedKey/attestationObject}}:
                 An {{ArrayBuffer}} constructed as follows:
@@ -8000,21 +8000,21 @@ where neither the signing key pair nor the associated [=credential=] need to con
         The CBOR map keys `alg` and `att-obj` are aliases of integer values,
         defined below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
-    1. If <code>|authData|.[=authData/extensions=]["previewSign"][sig]</code> is present,
-        set |signatureResult| to <code>|authData|.[=authData/extensions=]["previewSign"][sig]</code>
+    1. If <code>|authData|.[=authData/extensions=]["previewSign5"][sig]</code> is present,
+        set |signatureResult| to <code>|authData|.[=authData/extensions=]["previewSign5"][sig]</code>
         parsed as an {{ArrayBuffer}}.
         If this fails, set |signatureResult| to null.
 
         The CBOR map key `sig` is an alias of an integer value,
         defined below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
-    1. Set the [=client extension output=] <code>|assertionCreationData|.[=assertionCreationData/clientExtensionResults=].{{AuthenticationExtensionsClientOutputs/previewSign}}</code>
+    1. Set the [=client extension output=] <code>|assertionCreationData|.[=assertionCreationData/clientExtensionResults=].{{AuthenticationExtensionsClientOutputs/previewSign5}}</code>
         to an {{AuthenticationExtensionsSignOutputs}} value with the members:
 
         - {{AuthenticationExtensionsSignOutputs/generatedKey}}: |generatedKeyResult| if not null, otherwise omit this member.
         - {{AuthenticationExtensionsSignOutputs/signature}}: |signatureResult| if not null, otherwise omit this member.
         - {{AuthenticationExtensionsSignOutputs/errorCode}}:
-            <code>|authData|.[=authData/extensions=]["previewSign"][err]</code> if present, otherwise omit this member.
+            <code>|authData|.[=authData/extensions=]["previewSign5"][err]</code> if present, otherwise omit this member.
 
             The CBOR map key `err` is an aliase of an integer value,
             defined below in the CDDL for the [=authenticator extension output=].
@@ -8023,7 +8023,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
 : Client extension output
 :: <xmp class="idl">
     partial dictionary AuthenticationExtensionsClientOutputs {
-        AuthenticationExtensionsSignOutputs previewSign;
+        AuthenticationExtensionsSignOutputs previewSign5;
     };
 
     dictionary AuthenticationExtensionsSignOutputs {
@@ -8112,7 +8112,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
         :   <dfn>attestationObject</dfn>
         ::  An [=attestation object=] for the generated signing public key.
             This has the same structure as the top-level [=attestation object=],
-            except the `previewSign` [=authenticator extension output=] contains a `flags` member
+            except the `previewSign5` [=authenticator extension output=] contains a `flags` member
             indicating the [=user verification=] policy for the signing key
             instead of the `alg` and `sig` members.
     </div>
@@ -8142,7 +8142,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
     )
 
     $$extensionInput //= (
-      previewSign: {
+      previewSign5: {
         ; Registration or authentication input
         generateKeyInputs,
         //
@@ -8182,7 +8182,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
         MAY be present during [=authentication ceremonies=] only if `tbs` is present.
 
         A suitable value for this MAY be retrieved from
-        <code>|unsignedExtOutputs|["previewSign"][att-obj][2].[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialId=]</code>,
+        <code>|unsignedExtOutputs|["previewSign5"][att-obj][2].[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialId=]</code>,
         given the [=unsigned extension outputs=] from a previous [=registration ceremony|registration=]
         or [=authentication ceremony=] as |unsignedExtOutputs|.
 
@@ -8211,24 +8211,24 @@ where neither the signing key pair nor the associated [=credential=] need to con
     Extension outputs for error conditions are denoted as CDDL using key and value aliases
     defined below in the CDDL for the [=authenticator extension output=].
 
-    1. Let |extInput| denote <code>|extensions|["previewSign"]</code>.
+    1. Let |extInput| denote <code>|extensions|["previewSign5"]</code>.
 
     1. If the authenticator operation is [=authenticatorMakeCredential=] and <code>|extInput|[alg]</code> is not present,
-        set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+        set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
         to `{ err => missing-param-alg }` and abort these extension processing steps.
 
     1. If <code>|extInput|[flags]</code> is present and <code>|extInput|[alg]</code> is not present,
-        set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+        set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
         to `{ err => missing-param-alg }` and abort these extension processing steps.
 
     1. If <code>|extInput|[kh]</code>, <code>|extInput|[tbs]</code> or <code>|extInput|[args]</code> is present:
 
         1. If the current authenticator operation is not [=authenticatorGetAssertion=],
-            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => invalid-registration-operation }` and abort these extension processing steps.
 
         1. If <code>|extInput|[kh]</code> is not present or <code>|extInput|[tbs]</code> is not present,
-            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => missing-param-kh-tbs }` and abort these extension processing steps.
 
     1. Let |authData| denote the [=authenticator data=] that will be returned
@@ -8249,7 +8249,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
                 let |chosenAlg| be |candidateAlg| and [=break=].
 
         1. If |chosenAlg| is null,
-            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => unsupported-algorithm }` and abort these extension processing steps.
 
         1. Let |signFlags| be the value of <code>|extInput|[flags]</code>.
@@ -8274,7 +8274,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
             - `alg`: |chosenAlg|.
 
-        1. Set the [=unsigned extension output=] `"previewSign"` to a new CBOR map with the entries:
+        1. Set the [=unsigned extension output=] `"previewSign5"` to a new CBOR map with the entries:
             - `att-obj`: a CBOR byte array
                 encoding an [=attestation object=] generated as described in [[#sctn-generating-an-attestation-object]],
                 taking into account the value of |enterpriseAttestationPossible| if available,
@@ -8298,10 +8298,10 @@ where neither the signing key pair nor the associated [=credential=] need to con
                         - [=authData/attestedCredentialData/credentialPublicKey=]: |P| encoded as a COSE_Key map.
 
                     - [=authData/extensions=]: A CBOR map with the entries:
-                        - `"previewSign"`: A CBOR map with the entries:
+                        - `"previewSign5"`: A CBOR map with the entries:
                             - `flags`: |signFlags| encoded as a CBOR unsigned integer.
 
-                        Note: The `"previewSign"` key here is a CDDL text string literal,
+                        Note: The `"previewSign5"` key here is a CDDL text string literal,
                         but `flags` is an alias of an integer value.
 
                 - |hash|: |hash|.
@@ -8312,13 +8312,13 @@ where neither the signing key pair nor the associated [=credential=] need to con
     1. If <code>|extInput|[kh]</code> or <code>|extInput|[tbs]</code> is present:
 
         1. If |allowCredentialDescriptorList| is empty,
-            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => missing-param-allow-list }` and abort these extension processing steps.
 
         1. Decode the authenticator-specific encoding of <code>|extInput|[kh]</code> to extract the encoded |chosenAlg|, |signFlags| and |auxIkm|.
             This procedure SHOULD verify integrity to ensure that <code>|extInput|[kh]</code> was generated by this authenticator.
             If decoding or integrity check fails,
-            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => invalid-key-handle }` and abort these extension processing steps.
 
             An example implementation of this decoding is given in [[#sctn-sign-extension-example-key-handle-encoding]].
@@ -8328,20 +8328,20 @@ where neither the signing key pair nor the associated [=credential=] need to con
             Otherwise let |args| be null.
 
             If decoding fails,
-            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => cose-sign-args-invalid }` and abort these extension processing steps.
 
         1. If |args| is not null and <code>|args|[alg]</code> is not present or does not equal |chosenAlg|,
-            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => cose-sign-args-alg-mismatch }` and abort these extension processing steps.
 
         1. If the signing algorithm identified by |chosenAlg| requires additional arguments
             and |args| is null or does not include all required additional arguments,
-            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => cose-sign-args-missing-param }` and abort these extension processing steps.
 
         1. If |args| contains unknown parameters or parameters not applicable to the algorithm identified by |chosenAlg|,
-            set <code>|authData|.[=authData/extensions=]["previewSign"]</code>
+            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => cose-sign-args-unknown-param }` and abort these extension processing steps.
 
         1. If the [=authData/flags/UP=] bit is set in |signFlags| but not in <code>|authData|.[=authData/flags=]</code>,
@@ -8371,7 +8371,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
         The CBOR map keys `kh`, `tbs`, `args`, `alg` and `sig` are aliases of integer values,
         defined above and below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
-    1. Set <code>|authData|.[=authData/extensions=]["previewSign"]</code> to |extOutput|.
+    1. Set <code>|authData|.[=authData/extensions=]["previewSign5"]</code> to |extOutput|.
 
 
 : Authenticator extension output
@@ -8385,7 +8385,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
     err = -1
 
     $$extensionOutput //= (
-      previewSign: {
+      previewSign5: {
         ; Registration or authentication outputs
         alg     => COSEAlgorithmIdentifier,  ; Algorithm chosen from alg input
         //
@@ -8448,7 +8448,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
     att-obj = 7
 
     $$unsignedExtensionOutput //= (
-      previewSign: {
+      previewSign5: {
         ; Registration (key generation) outputs
         att-obj => bstr .cbor attObj,  ; Attestation object for signing key pair
       },
@@ -8500,7 +8500,7 @@ with the following {{DOMException}} error names for the following reasons:
         </tr>
     </table>
     <figcaption>
-        {{DOMException}} error names and reasons for the `previewSign` extension.
+        {{DOMException}} error names and reasons for the `previewSign5` extension.
     </figcaption>
 </figure>
 
@@ -8524,7 +8524,7 @@ To encode |chosenAlg|, |signFlags| and |auxIkm|, producing the output |kh|, perf
 1. Let |khMac| be the output of HMAC-SHA-256 [[RFC2104]] with the inputs:
 
     - Secret key `K`: |macKey|
-    - Input `text`: <code>|khParams| || UTF8Encode("previewSign") || |authData|.[=authData/rpIdHash=]</code>.
+    - Input `text`: <code>|khParams| || UTF8Encode("previewSign5") || |authData|.[=authData/rpIdHash=]</code>.
 
 1. Let |kh| be <code>|khMac| || |khParams|</code>.
 
@@ -8537,7 +8537,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 1. Verify that |mac| equals the output of HMAC-SHA-256 [[RFC2104]] with the inputs:
 
     - Secret key `K`: |macKey|
-    - Input `text`: <code>|khParams| || UTF8Encode("previewSign") || |authData|.[=authData/rpIdHash=]</code>.
+    - Input `text`: <code>|khParams| || UTF8Encode("previewSign5") || |authData|.[=authData/rpIdHash=]</code>.
 
     If not, this |kh| was generated by a different authenticator and decoding has failed.
     Return an error as defined in the extension processing steps.
@@ -8558,6 +8558,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 
 - Version 5
     - Published: TBD
+    - Changed extension identifier to `previewSign5`.
     - Permit `generateKey` in authentication ceremonies.
         - Client changes:
             - Client input `signByCredential` is no longer required in authentication ceremonies, but still forbidden in registration ceremonies.
