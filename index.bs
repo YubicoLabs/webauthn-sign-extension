@@ -8406,15 +8406,25 @@ where neither the signing key pair nor the associated [=credential=] need to con
             and/or auxiliary data of the [=authenticator's=] choice to be used to generate a signing key pair.
 
         1. Let |chosenAlg| be null.
+        1. Let |unsupportedCombination| be [FALSE].
 
         1. [=list/For each=] |candidateAlg| in <code>|extInput|[alg]</code>:
 
-            1. If the [=authenticator=] supports |candidateAlg| for signing operations,
+            1. If the [=authenticator=] supports |candidateAlg| for signing operations
+                in combination with the algorithm of the associated [=public key credential=],
                 let |chosenAlg| be |candidateAlg| and [=break=].
 
-        1. If |chosenAlg| is null,
-            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
-            to `{ err => unsupported-algorithm }` and abort these extension processing steps.
+            1. If the [=authenticator=] can support |chosenAlg| for signing operations,
+                but not in combination with the algorithm of the associated [=public key credential=],
+                set |unsupportedCombination| to [FALSE].
+
+        1. If |chosenAlg| is null:
+            1. If |unsupportedCombination| is [TRUE],
+                set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
+                to `{ err => unsupported-algorithm-combination }` and abort these extension processing steps.
+
+            1. Set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
+                to `{ err => unsupported-algorithm }` and abort these extension processing steps.
 
         1. Let |signFlags| be the value of <code>|extInput|[flags]</code>.
 
@@ -8572,12 +8582,13 @@ where neither the signing key pair nor the associated [=credential=] need to con
       invalid-registration-operation: 2,
       missing-param-kh-tbs: 3,
       unsupported-algorithm: 4,
-      missing-param-allow-list: 5,
-      invalid-key-handle: 6,
-      cose-sign-args-invalid: 7,
-      cose-sign-args-alg-mismatch: 8,
-      cose-sign-args-missing-param: 9,
-      cose-sign-args-unknown-param: 10,
+      unsupported-algorithm-combination: 5,
+      missing-param-allow-list: 6,
+      invalid-key-handle: 7,
+      cose-sign-args-invalid: 8,
+      cose-sign-args-alg-mismatch: 9,
+      cose-sign-args-missing-param: 10,
+      cose-sign-args-unknown-param: 11,
     )
     ```
 
