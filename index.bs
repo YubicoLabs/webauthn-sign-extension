@@ -8592,7 +8592,7 @@ where neither the signing key pair nor the associated [=credential=] need to con
         MAY be present in [=authentication ceremonies=] unless `err` is present.
 
     :   err
-    ::  An error code. Present if and only extension processing failed in some way.
+    ::  An error code. Present if and only if extension processing failed in some way.
         MAY be present in [=registration ceremonies=] and [=authentication ceremonies=].
 
     :   flags
