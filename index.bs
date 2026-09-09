@@ -8377,6 +8377,9 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     1. Let |extInput| denote <code>|extensions|["previewSign5"]</code>.
 
+    1. Let |authData| denote the [=authenticator data=] that will be returned
+        from the [=authenticatorMakeCredential=] or [=authenticatorGetAssertion=] operation.
+
     1. If the authenticator operation is [=authenticatorMakeCredential=] and <code>|extInput|[alg]</code> is not present,
         set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
         to `{ err => missing-param-alg }` and abort these extension processing steps.
@@ -8394,9 +8397,6 @@ where neither the signing key pair nor the associated [=credential=] need to con
         1. If <code>|extInput|[kh]</code> is not present or <code>|extInput|[tbs]</code> is not present,
             set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => missing-param-kh-tbs }` and abort these extension processing steps.
-
-    1. Let |authData| denote the [=authenticator data=] that will be returned
-        from the [=authenticatorMakeCredential=] or [=authenticatorGetAssertion=] operation.
 
     1. Let |extOutput| be an empty CBOR map.
 
