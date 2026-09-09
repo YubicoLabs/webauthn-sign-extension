@@ -6,9 +6,9 @@ Notes:
   tags will be rendered. It also has the spec 'Level' value (gratuitously) appended.
 -->
 
-<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 5-SNAPSHOT</h1>
+<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 5-SNAPSHOT-2026-09-09T13:45</h1>
 <pre class='metadata'>
-Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 5-SNAPSHOT
+Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 5-SNAPSHOT-2026-09-09T13:45
 Status: ED
 Prepare for TR: false
 ED: https://w3c.github.io/webauthn/
@@ -7879,7 +7879,7 @@ This permission MUST be configured per-origin and MUST NOT offer the capability 
 This section defines extensions that are both [=client extensions=] and [=authenticator extensions=].
 
 
-### Signing extension (`previewSign5`) version 5-SNAPSHOT ### {#sctn-sign-extension}
+### Signing extension (`previewSign5`) version 5-SNAPSHOT-2026-09-09T13:45 ### {#sctn-sign-extension}
 
 This [=authenticator extension|authenticator=] [=registration extension=] and [=authentication extension=]
 allows a [=[RP]=] to sign arbitrary data using an asymmetric key pair associated with a [=credential=]
@@ -8745,7 +8745,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 [INFORMATIVE]
 
 - Version 5
-    - Published: TBD
+    - Published: TBD, current snapshot 2026-09-09T13:45
     - Changed extension identifier to `previewSign5`.
     - Changed `USVString` to `DOMString` in type of client input `signByCredential`.
     - Permit `generateKey` in authentication ceremonies.
