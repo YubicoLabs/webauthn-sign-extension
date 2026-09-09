@@ -7940,6 +7940,13 @@ is unlikely to impose any additional restriction in practice,
 but does enable support for stateless [=authenticator=] implementations
 where neither the signing key pair nor the associated [=credential=] need to consume storage space on the [=authenticator=].
 
+[=Authenticators=] MAY choose to not support key generation in [=assertion ceremonies=],
+instead returning an error output if key generation inputs are present in an assertion ceremony.
+Authenticators MAY also choose to not support all combinations of algorithms for the associated [=credential=]
+and the signing key pair, instead returning an error output if such a combination is requested for key generation.
+For example, an authenticator might support an ESP256 signing key pair associated with an ML-DSA-87 credential or vice versa,
+but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 credential due to limited computational capacity.
+
 
 : Extension identifier
 :: `previewSign5`
@@ -8402,6 +8409,11 @@ where neither the signing key pair nor the associated [=credential=] need to con
 
     1. If <code>|extInput|[alg]</code> is present:
 
+        1. If the current authenticator operation is [=authenticatorGetAssertion=]
+            and the [=authenticator=] does not support key generation during assertion generation operations,
+            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
+            to `{ err => unsupported-assertion-operation }` and abort these extension processing steps.
+
         1. Let |auxIkm| denote some, possibly empty, random entropy
             and/or auxiliary data of the [=authenticator's=] choice to be used to generate a signing key pair.
 
@@ -8581,14 +8593,15 @@ where neither the signing key pair nor the associated [=credential=] need to con
       missing-param-alg: 1,
       invalid-registration-operation: 2,
       missing-param-kh-tbs: 3,
-      unsupported-algorithm: 4,
-      unsupported-algorithm-combination: 5,
-      missing-param-allow-list: 6,
-      invalid-key-handle: 7,
-      cose-sign-args-invalid: 8,
-      cose-sign-args-alg-mismatch: 9,
-      cose-sign-args-missing-param: 10,
-      cose-sign-args-unknown-param: 11,
+      unsupported-assertion-operation: 4,
+      unsupported-algorithm: 5,
+      unsupported-algorithm-combination: 6,
+      missing-param-allow-list: 7,
+      invalid-key-handle: 8,
+      cose-sign-args-invalid: 9,
+      cose-sign-args-alg-mismatch: 10,
+      cose-sign-args-missing-param: 11,
+      cose-sign-args-unknown-param: 12,
     )
     ```
 
@@ -8754,6 +8767,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
             - Signature generation is now conditioned on `kh` and `tbs` inputs; it is an error if exactly one of these is present.
             - Authenticator operations now instruct to respect `attestationFormat` parameter and "take into account `enterpriseAttestationPossible`"
                 when generating signing key pairs in authenticatorMakeCredential.
+            - Authenticator may return `err` output `unsupported-assertion-operation` if `generateKey` is not supported in authentication ceremonies.
     - Changed client error names:
         - When `allowCredentials` is empty in `get()`: `DataError` instead of `NotSupportedError`.
         - When sizes of `allowCredentials` and `signByCredential` differ: `DataError` instead of `NotSupportedError`.
