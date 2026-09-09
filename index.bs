@@ -8424,7 +8424,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
             1. If the [=authenticator=] supports |candidateAlg| for signing operations
                 in combination with the algorithm of the associated [=public key credential=],
-                let |chosenAlg| be |candidateAlg| and [=break=].
+                set |chosenAlg| to |candidateAlg| and [=break=].
 
             1. If the [=authenticator=] can support |chosenAlg| for signing operations,
                 but not in combination with the algorithm of the associated [=public key credential=],
