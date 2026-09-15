@@ -7971,7 +7971,8 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         ::  If present, the [=authenticator=] is requested to generate a new signing key pair
             and return the signing public key in the extension output.
 
-            This member MUST be present during a [=registration ceremony=], and MAY be present during an [=authentication ceremony=].
+            This member MUST be present during a [=registration ceremony=],
+            and MAY be present during an [=authentication ceremony=] only if {{signByCredential}} is absent.
 
         :   <dfn>signByCredential</dfn>
         ::  A record mapping [=base64url encoding|base64url encoded=] [=credential IDs=] to signing inputs to use for each credential.
@@ -7979,7 +7980,8 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
             this MUST contain an [=map/entry=] for each [=credential ID=] in {{PublicKeyCredentialRequestOptions/allowCredentials}},
             and no other entries.
 
-            This member MUST NOT be present during a [=registration ceremony=].
+            This member MUST NOT be present during a [=registration ceremony=],
+            and MAY be present during an [=authentication ceremony=] only if {{generateKey}} is absent.
 
             If the [=authenticator=] [=contains=] any credentials whose [=credential IDs=] appear as [=map/keys=],
             the [=client=] selects one of them and sends the corresponding [=map/value=]
@@ -8057,6 +8059,10 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
     1. If the current ceremony is a [=registration ceremony=]
         and <code>|extSign|.{{AuthenticationExtensionsSignInputs/generateKey}}</code> is not present,
+        return a {{DOMException}} whose name is “{{NotSupportedError}}”.
+
+    1. If both <code>|extSign|.{{AuthenticationExtensionsSignInputs/generateKey}}</code>
+        and <code>|extSign|.{{AuthenticationExtensionsSignInputs/signByCredential}}</code> are present,
         return a {{DOMException}} whose name is “{{NotSupportedError}}”.
 
     1. Let |authenticatorInput| be an empty CBOR map.
@@ -8318,7 +8324,6 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         generateKeyInputs,
         //
         ; Authentication input
-        ? generateKeyInputs,
         ? signInputs,
       },
     )
@@ -8329,7 +8334,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     :   alg
     ::  A list of acceptable signature algorithms, ordered from most preferred to least preferred.
         MUST be present during [=registration ceremonies=].
-        MAY be present during [=authentication ceremonies=].
+        MAY be present during [=authentication ceremonies=] only if `kh`, `tbs` and `args` are absent.
 
         The [=authenticator=] will create a signing key pair for the most preferred algorithm possible.
         If none of the listed algorithms are supported, the [=registration ceremony|registration=] or [=authentication ceremony=] fails.
@@ -8350,7 +8355,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     :   kh
     ::  The [=signing key handle=] to use for generating the signature.
         MUST NOT be present during [=registration ceremonies=].
-        MAY be present during [=authentication ceremonies=] only if `tbs` is present.
+        MAY be present during [=authentication ceremonies=] only if `tbs` is present and `alg` is absent.
 
         A suitable value for this MAY be retrieved from
         <code>|unsignedExtOutputs|["previewSign5"][att-obj][2].[=authData/attestedCredentialData=].[=authData/attestedCredentialData/credentialId=]</code>,
@@ -8360,12 +8365,12 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     :   tbs
     ::  The data to be signed.
         MUST NOT be present during [=registration ceremonies=].
-        MAY be present during [=authentication ceremonies=] only if `kh` is present.
+        MAY be present during [=authentication ceremonies=] only if `kh` is present and `alg` is absent.
 
     :   args
     ::  Additional arguments to the signing algorithm, if needed by the signing algorithm.
         MUST NOT be present during [=registration ceremonies=].
-        MAY be present during [=authentication ceremonies=] only if `kh` and `tbs` are present.
+        MAY be present during [=authentication ceremonies=] only if `kh` and `tbs` are present and `alg` is absent.
         If present, this MUST contain a CBOR map encoding a COSE_Sign_Args object [[!I-D.cose-2p-algs]].
 
     Note: The `args` entry is defined as a byte string containing CBOR-encoded data
@@ -8397,6 +8402,10 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
     1. If <code>|extInput|[kh]</code>, <code>|extInput|[tbs]</code> or <code>|extInput|[args]</code> is present:
 
+        1. If <code>|extInput|[alg]</code> is present,
+            return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
+            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
+
         1. If the current authenticator operation is not [=authenticatorGetAssertion=],
             set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => invalid-registration-operation }` and abort these extension processing steps.
@@ -8404,6 +8413,10 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         1. If <code>|extInput|[kh]</code> is not present or <code>|extInput|[tbs]</code> is not present,
             set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
             to `{ err => missing-param-kh-tbs }` and abort these extension processing steps.
+
+    1. If <code>|extInput|</code> [=map/is empty=],
+        return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
+        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
 
     1. Let |extOutput| be an empty CBOR map.
 
@@ -8572,7 +8585,6 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         alg     => COSEAlgorithmIdentifier,  ; Algorithm chosen from alg input
         //
         ; Authentication outputs
-        ? alg   => COSEAlgorithmIdentifier,  ; Algorithm chosen from alg input if present
         sig     => bstr,                     ; Signature over tbs input
         //
         ; Error output
@@ -8670,6 +8682,8 @@ with the following {{DOMException}} error names for the following reasons:
             <td>
                 - {{AuthenticationExtensionsSignInputs/generateKey}} and {{AuthenticationExtensionsSignInputs/signByCredential}}
                     client inputs were both absent.
+                - {{AuthenticationExtensionsSignInputs/generateKey}} and {{AuthenticationExtensionsSignInputs/signByCredential}}
+                    client inputs were both present.
                 - {{AuthenticationExtensionsSignInputs/generateKey}} was absent in a [=registration ceremony=].
                 - {{AuthenticationExtensionsSignInputs/signByCredential}} was present in a [=registration ceremony=].
             </td>
@@ -8746,7 +8760,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
     - Permit `generateKey` in authentication ceremonies.
         - Client changes:
             - Client input `signByCredential` is no longer required in authentication ceremonies, but still forbidden in registration ceremonies.
-            - At least one of client inputs `generateKey` or `signByCredential` is required in authentication ceremonies.
+            - Exactly one of client inputs `generateKey` or `signByCredential` is required in authentication ceremonies.
             - Registration and authentication processing steps merged to one set of processing steps for both operations.
             - Malformed authenticator outputs are now silently ignored.
             - Client extension output is now always set, but may be empty.
@@ -8754,10 +8768,8 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
                 This may now result in empty authenticator extension input.
         - Authenticator changes:
             - Registration and authentication processing steps merged to one set of processing steps for both operations.
-            - Authenticator inputs CDDL now allows both `alg, ?flags` and `kh, tbs, ?args` in the same input.
-                Authenticator input may now be empty in authentication ceremonies.
-            - Authenticator outputs CDDL now allows both `alg` and `sig` in the same output.
-            - Authenticator output may now be empty.
+            - Authenticator inputs CDDL now allows either `alg, ?flags` or `kh, tbs, ?args` in getAssertion inputs.
+            - Authenticator outputs CDDL now allows either `alg` or `sig` in getAssertion output.
             - Key generation is now conditioned on `alg` input and may execute in authenticatorGetAssertion.
             - Signature generation is now conditioned on `kh` and `tbs` inputs; it is an error if exactly one of these is present.
             - Authenticator operations now instruct to respect `attestationFormat` parameter and "take into account `enterpriseAttestationPossible`"
