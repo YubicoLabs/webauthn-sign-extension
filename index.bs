@@ -8393,12 +8393,12 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         from the [=authenticatorMakeCredential=] or [=authenticatorGetAssertion=] operation.
 
     1. If the authenticator operation is [=authenticatorMakeCredential=] and <code>|extInput|[alg]</code> is not present,
-        set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
-        to `{ err => missing-param-alg }` and abort these extension processing steps.
+        return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
+        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
 
     1. If <code>|extInput|[flags]</code> is present and <code>|extInput|[alg]</code> is not present,
-        set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
-        to `{ err => missing-param-alg }` and abort these extension processing steps.
+        return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
+        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
 
     1. If <code>|extInput|[kh]</code>, <code>|extInput|[tbs]</code> or <code>|extInput|[args]</code> is present:
 
@@ -8407,12 +8407,12 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
             Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
 
         1. If the current authenticator operation is not [=authenticatorGetAssertion=],
-            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
-            to `{ err => invalid-registration-operation }` and abort these extension processing steps.
+            return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
+            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
 
         1. If <code>|extInput|[kh]</code> is not present or <code>|extInput|[tbs]</code> is not present,
-            set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
-            to `{ err => missing-param-kh-tbs }` and abort these extension processing steps.
+            return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
+            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
 
     1. If <code>|extInput|</code> [=map/is empty=],
         return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
@@ -8598,17 +8598,14 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     )
 
     previewSignError = &(
-      missing-param-alg: 1,
-      invalid-registration-operation: 2,
-      missing-param-kh-tbs: 3,
-      unsupported-assertion-operation: 4,
-      unsupported-algorithm: 5,
-      unsupported-algorithm-combination: 6,
-      invalid-key-handle: 7,
-      cose-sign-args-invalid: 8,
-      cose-sign-args-alg-mismatch: 9,
-      cose-sign-args-missing-param: 10,
-      cose-sign-args-unknown-param: 11,
+      unsupported-assertion-operation: 1,
+      unsupported-algorithm: 2,
+      unsupported-algorithm-combination: 3,
+      invalid-key-handle: 4,
+      cose-sign-args-invalid: 5,
+      cose-sign-args-alg-mismatch: 6,
+      cose-sign-args-missing-param: 7,
+      cose-sign-args-unknown-param: 8,
     )
     ```
 
