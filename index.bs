@@ -8561,12 +8561,22 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
                 set |unsupportedCombination| to [FALSE].
 
         1. If |chosenAlg| is null:
+
+            1. Let `support-value` be an array describing what algorithms and algorithm combinations the authenticator supports
+                in the format described in the authenticator extension output section.
+
             1. If |unsupportedCombination| is [TRUE],
                 set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
-                to `{ err => unsupported-algorithm-combination }` and abort these extension processing steps.
+                to `{ err => unsupported-algorithm-combination, support => support-value }` and abort these extension processing steps.
+
+                The authenticator MAY omit the `support` member if including it
+                would overflow the authenticator's computational resources or protocol message size limits.
 
             1. Set <code>|authData|.[=authData/extensions=]["previewSign5"]</code>
-                to `{ err => unsupported-algorithm }` and abort these extension processing steps.
+                to `{ err => unsupported-algorithm, support => support-value }` and abort these extension processing steps.
+
+                The authenticator MAY omit the `support` member if including it
+                would overflow the authenticator's computational resources or protocol message size limits.
 
         1. Let |signFlags| be the value of <code>|extInput|[flags]</code>.
 
@@ -8622,7 +8632,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
                 - |hash|: |hash|.
 
-        The CBOR map keys `err`, `alg`, `flags` and `att-obj` are aliases of integer values,
+        The CBOR map keys `err`, `support`, `alg`, `flags` and `att-obj` are aliases of integer values,
         defined above and below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
     1. If <code>|extInput|[kh]</code> or <code>|extInput|[tbs]</code> is present:
@@ -9001,6 +9011,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
             - Registration and authentication inputs may now contain optional `support: true` to request list of supported algorithms and combinations.
             - Registration and authentication outputs may now contain a `support` output listing of supported algorithms and combinations.
             - `alg` or `kh` and `tbs` input is no longer required if `support` is present.
+            - `support` output may also be included in "unsupported algorithm" error outputs.
     - Changed client error names:
         - When `allowCredentials` is empty in `get()`: `DataError` instead of `NotSupportedError`.
         - When sizes of `allowCredentials` and `signByCredential` differ: `DataError` instead of `NotSupportedError`.
