@@ -8053,8 +8053,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         or <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/extensions}}.{{AuthenticationExtensionsClientInputs/previewSign5}}</code>,
         depending on the type of |pkOptions|.
 
-    1. If <code>|extSign|.{{AuthenticationExtensionsSignInputs/generateKey}}</code> is not present
-        and <code>|extSign|.{{AuthenticationExtensionsSignInputs/signByCredential}}</code> is not present,
+    1. If <code>|extSign|</code> [=map/is empty=],
         return a {{DOMException}} whose name is “{{NotSupportedError}}”.
 
     1. If the current ceremony is a [=registration ceremony=]
@@ -8392,7 +8391,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     1. Let |authData| denote the [=authenticator data=] that will be returned
         from the [=authenticatorMakeCredential=] or [=authenticatorGetAssertion=] operation.
 
-    1. If the authenticator operation is [=authenticatorMakeCredential=] and <code>|extInput|[alg]</code> is not present,
+    1. If <code>|extInput|</code> [=map/is empty=],
         return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
         Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
 
@@ -8413,10 +8412,6 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         1. If <code>|extInput|[kh]</code> is not present or <code>|extInput|[tbs]</code> is not present,
             return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
             Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
-
-    1. If <code>|extInput|</code> [=map/is empty=],
-        return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
-        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
 
     1. Let |extOutput| be an empty CBOR map.
 
