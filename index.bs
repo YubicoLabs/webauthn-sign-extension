@@ -8500,7 +8500,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
                 - |hash|: |hash|.
 
-        The CBOR map keys `alg`, `flags` and `att-obj` are aliases of integer values,
+        The CBOR map keys `err`, `alg`, `flags` and `att-obj` are aliases of integer values,
         defined above and below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
     1. If <code>|extInput|[kh]</code> or <code>|extInput|[tbs]</code> is present:
@@ -8558,7 +8558,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
                 For example, using CDDL notation, if |extInput| as CBOR is <code>h&#39;a202400643616263'</code>,
                 then the content part of <code>|extInput|[tbs]</code> is <code>h&#39;616263'</code> (3 bytes).
 
-        The CBOR map keys `kh`, `tbs`, `args`, `alg` and `sig` are aliases of integer values,
+        The CBOR map keys `kh`, `tbs`, `err`, `args`, `alg` and `sig` are aliases of integer values,
         defined above and below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
     1. Set <code>|authData|.[=authData/extensions=]["previewSign5"]</code> to |extOutput|.
