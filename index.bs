@@ -8097,7 +8097,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         1. If the current ceremony is not an [=authentication ceremony=],
             return a {{DOMException}} whose name is “{{NotSupportedError}}”.
 
-        1. If <code>|pkOptions|.{{PublicKeyCredentialRequestOptions/allowCredentials}}</code> [=list/is empty=],
+        1. If <code>|extSign|.{{AuthenticationExtensionsSignInputs/signByCredential}}</code> [=list/is empty=],
             return a {{DOMException}} whose name is “{{DataError}}”.
 
         1. If the [=map/size=] of <code>|extSign|.{{AuthenticationExtensionsSignInputs/signByCredential}}</code>
@@ -8899,7 +8899,7 @@ with the following {{DOMException}} error names for the following reasons:
         <tr>
             <td>{{DataError}}</td>
             <td>
-                - {{PublicKeyCredentialRequestOptions/allowCredentials}} was empty in an [=authentication ceremony=].
+                - The {{AuthenticationExtensionsSignInputs/signByCredential}} input was present and empty.
                 - The [=map/size=] of {{AuthenticationExtensionsSignInputs/signByCredential}}
                     did not equal the [=list/size=] of {{PublicKeyCredentialRequestOptions/allowCredentials}}.
             </td>
