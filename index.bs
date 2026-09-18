@@ -7963,6 +7963,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     dictionary AuthenticationExtensionsSignInputs {
         AuthenticationExtensionsSignGenerateKeyInputs generateKey;
         record<DOMString, AuthenticationExtensionsSignSignInputs> signByCredential;
+        boolean support;
     };
     </xmp>
 
@@ -7971,7 +7972,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         ::  If present, the [=authenticator=] is requested to generate a new signing key pair
             and return the signing public key in the extension output.
 
-            This member MUST be present during a [=registration ceremony=],
+            This member MUST be present during a [=registration ceremony=] unless {{AuthenticationExtensionsSignInputs/support}} is present,
             and MAY be present during an [=authentication ceremony=] only if {{signByCredential}} is absent.
 
         :   <dfn>signByCredential</dfn>
@@ -7987,6 +7988,13 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
             the [=client=] selects one of them and sends the corresponding [=map/value=]
             to the authenticator as inputs to the signing algorithm.
             Otherwise, the [=authentication ceremony=] fails.
+
+        :   <dfn>support</dfn>
+        ::  The Boolean value [TRUE] to request information about what algorithms the authenticator supports,
+            or absent if such information is not needed.
+            MAY be present during [=registration ceremony|registration=] or [=authentication ceremonies=].
+            MUST be present if {{generateKey}} and {{signByCredential}} are absent.
+            MUST NOT be set to [FALSE].
     </div>
 
     <xmp class="idl">
@@ -8056,8 +8064,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     1. If <code>|extSign|</code> [=map/is empty=],
         return a {{DOMException}} whose name is “{{NotSupportedError}}”.
 
-    1. If the current ceremony is a [=registration ceremony=]
-        and <code>|extSign|.{{AuthenticationExtensionsSignInputs/generateKey}}</code> is not present,
+    1. If <code>|extSign|.{{AuthenticationExtensionsSignInputs/support}}</code> is present and set to [FALSE],
         return a {{DOMException}} whose name is “{{NotSupportedError}}”.
 
     1. If both <code>|extSign|.{{AuthenticationExtensionsSignInputs/generateKey}}</code>
@@ -8139,6 +8146,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
     1. Let |generatedKeyResult| be null.
     1. Let |signatureResult| be null.
+    1. Let |supportedAlgorithmsResult| be null.
 
     1. If <code>|authData|.[=authData/extensions=]["previewSign5"][alg]</code> is present:
 
@@ -8184,11 +8192,78 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         The CBOR map key `sig` is an alias of an integer value,
         defined below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
+    1. If <code>|authData|.[=authData/extensions=]["previewSign5"][support]</code> is present,
+        set |supportedAlgorithmsResult| to a [=list=] constructed as follows:
+
+        1. Let |supportList| be an alias of <code>|authData|.[=authData/extensions=]["previewSign5"][support]</code>.
+
+        1. Let |parentAlgorithms| be <code>|supportList|[0]</code>
+            parsed as an array of integer values.
+
+        1. Let |childAlgorithms| be <code>|supportList|[1]</code>
+            parsed as an array of integer values if present,
+            or an alias of |parentAlgorithms| if absent.
+
+        1. Let |supportedAlgorithms| be an empty [=set=].
+
+        1. If <code>|supportList|[2]</code>
+            is absent or set to [FALSE]:
+
+            1. [=list/For each=] |parentAlg| of |parentAlgorithms|:
+                1. [=list/For each=] |childAlg| of |childAlgorithms|:
+                    1. Add (|parentAlg|, |childAlg|) to |supportedAlgorithms|.
+
+        1. Let |supportRangesIdx| be an integer initialized to 3.
+        1. [=While=] <code>|supportList|[|supportRangesIdx|]</code> [=list/exists=]:
+
+            1. Let |parentStart| be <code>|supportList|[|supportRangesIdx|]</code>
+                parsed as a nonnegative integer.
+                Increment |supportRangesIdx| by 1.
+
+            1. Let |parentEnd| be an integer initialized to |parentStart| + 1.
+            1. If <code>|supportList|[|supportRangesIdx|]</code> is negative:
+                1. Set |parentEnd| to <code>|parentStart| - |supportList|[|supportRangesIdx|] + 1</code>.
+                    Increment |supportRangesIdx| by 1.
+
+            1. Let |childStart| be <code>|supportList|[|supportRangesIdx|]</code>
+                parsed as a nonnegative integer.
+                Increment |supportRangesIdx| by 1.
+
+            1. Let |childEnd| be an integer initialized to |childStart| + 1.
+            1. If <code>|supportList|[|supportRangesIdx|]</code> [=list/exists=] and is negative:
+                1. Set |childEnd| to <code>|childStart| - |supportList|[|supportRangesIdx|] + 1</code>.
+                    Increment |supportRangesIdx| by 1.
+
+            1. [=For each=] |parentIdx| of [=the range=] |parentStart| to |parentEnd|, exclusive:
+                1. [=For each=] |childIdx| of [=the range=] |childStart| to |childEnd|, exclusive:
+                    1. If <code>|supportList|[2]</code> is [FALSE],
+                        [=set/remove=] (|parentAlgorithms|[|parentIdx|], |childAlgorithms|[|childIdx|]) from |supportedAlgorithms|.
+                        Otherwise,
+                        [=set/append=] (|parentAlgorithms|[|parentIdx|], |childAlgorithms|[|childIdx|]) to |supportedAlgorithms|.
+
+        1. [=set/Sort=] |supportedAlgorithms| in ascending order, with |a| being less than |b|
+            if |a|'s first item is less than |b|'s first item
+            or if |a|'s first item equals |b|'s first item and |a|'s second item is less than |b|'s second item.
+
+        1. Set |supportedAlgorithmsResult| to an empty [=list=].
+
+        1. [=list/For each=] |algCombination| of |supportedAlgorithms|:
+            1. [=list/Append=] a new {{AuthenticationExtensionsSignSupportedAlgorithm}} value to |supportedAlgorithmsResult|
+                with the members:
+                - {{AuthenticationExtensionsSignSupportedAlgorithm/credential}}: The first item of |algCombination|.
+                - {{AuthenticationExtensionsSignSupportedAlgorithm/previewSign5}}: The second item of |algCombination|.
+
+        If any of these steps fail, set |supportedAlgorithmsResult| to null.
+
+        The CBOR map key `support` is an alias of an integer value,
+        defined below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
+
     1. Set the [=client extension output=] <code>|assertionCreationData|.[=assertionCreationData/clientExtensionResults=].{{AuthenticationExtensionsClientOutputs/previewSign5}}</code>
         to an {{AuthenticationExtensionsSignOutputs}} value with the members:
 
         - {{AuthenticationExtensionsSignOutputs/generatedKey}}: |generatedKeyResult| if not null, otherwise omit this member.
         - {{AuthenticationExtensionsSignOutputs/signature}}: |signatureResult| if not null, otherwise omit this member.
+        - {{AuthenticationExtensionsSignOutputs/supportedAlgorithms}}: |supportedAlgorithmsResult| if not null, otherwise omit this member.
         - {{AuthenticationExtensionsSignOutputs/errorCode}}:
             <code>|authData|.[=authData/extensions=]["previewSign5"][err]</code> if present, otherwise omit this member.
 
@@ -8206,6 +8281,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         AuthenticationExtensionsSignGeneratedKey generatedKey;
         ArrayBuffer                              signature;
         unsigned long                            errorCode;
+        sequence<AuthenticationExtensionsSignSupportedAlgorithm> supportedAlgorithms;
     };
     </xmp>
 
@@ -8234,10 +8310,27 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         :   <dfn>errorCode</dfn>
         ::  An error code, whose values are defined below in the CDDL for the [=authenticator extension outputs=].
             MAY be present in both [=registration ceremony|registration=] and [=authentication ceremonies=],
-            in which case it is the only member present.
+            in which case {{AuthenticationExtensionsSignOutputs/generatedKey}}
+            and {{AuthenticationExtensionsSignOutputs/signature}} are absent.
 
             This communicates error conditions from the [=authenticator=] that only the [=[RP]=] can resolve,
             and appears only when the [=client extension input=] is otherwise well-formed.
+
+        :   <dfn>supportedAlgorithms</dfn>
+        ::  A sequence of pairs of {{COSEAlgorithmIdentifier}} values
+            indicating a combination of associated [=credential=] algorithm and `previewSign5` signing algorithm
+            supported by the [=authenticator=].
+            MAY be present in both [=registration ceremony|registration=] and [=authentication ceremonies=].
+            Present only if the {{AuthenticationExtensionsSignInputs/support}} input was present and set to [TRUE],
+            but MAY be absent even if {{AuthenticationExtensionsSignInputs/support}} was [TRUE]
+            if {{AuthenticationExtensionsSignOutputs/generatedKey}} or {{AuthenticationExtensionsSignOutputs/signature}} is present.
+
+            When present, its value is a sequence of pairs indicating one combination of supported algorithms.
+            Any algorithm or combination not included is not supported.
+
+            The sequence MUST be ordered in ascending numeric order of
+            {{AuthenticationExtensionsSignSupportedAlgorithm/credential}} first,
+            and ascending numeric order of {{AuthenticationExtensionsSignSupportedAlgorithm/previewSign5}} second.
     </div>
 
     <xmp class="idl">
@@ -8293,6 +8386,22 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
             instead of the `alg` and `sig` members.
     </div>
 
+   <xmp class="idl">
+    dictionary AuthenticationExtensionsSignSupportedAlgorithm {
+        required COSEAlgorithmIdentifier credential;
+        required COSEAlgorithmIdentifier previewSign5;
+    };
+    </xmp>
+
+    <div dfn-type="dict-member" dfn-for="AuthenticationExtensionsSignSupportedAlgorithm">
+        :   <dfn>credential</dfn>
+        ::  A supported algorithm for the associated [=credential=].
+
+        :   <dfn>previewSign5</dfn>
+        ::  A supported `previewSign5` extension signing algorithm supported
+            when the associated [=credential=]'s algorithm is {{AuthenticationExtensionsSignSupportedAlgorithm/credential}}.
+    </div>
+
 
 : Authenticator extension input
 :: A CBOR map with the structure of the following CDDL:
@@ -8304,6 +8413,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     flags = 4
     tbs = 6
     args = 7
+    support = 8
 
     generateKeyInputs = (
       alg        => [ + COSEAlgorithmIdentifier ],
@@ -8320,10 +8430,15 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     $$extensionInput //= (
       previewSign5: {
         ; Registration or authentication input
+        support => true,
+        //
+        ; Registration or authentication input
         generateKeyInputs,
+        ? support => true,
         //
         ; Authentication input
-        ? signInputs,
+        signInputs,
+        ? support => true,
       },
     )
     ```
@@ -8332,7 +8447,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
     :   alg
     ::  A list of acceptable signature algorithms, ordered from most preferred to least preferred.
-        MUST be present during [=registration ceremonies=].
+        MUST be present during [=registration ceremonies=] unless `support` is present.
         MAY be present during [=authentication ceremonies=] only if `kh`, `tbs` and `args` are absent.
 
         The [=authenticator=] will create a signing key pair for the most preferred algorithm possible.
@@ -8371,6 +8486,13 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         MUST NOT be present during [=registration ceremonies=].
         MAY be present during [=authentication ceremonies=] only if `kh` and `tbs` are present and `alg` is absent.
         If present, this MUST contain a CBOR map encoding a COSE_Sign_Args object [[!I-D.cose-2p-algs]].
+
+    :   support
+    ::  The Boolean value [TRUE] to request information about what algorithms the authenticator supports,
+        or absent if such information is not needed.
+        MAY be present during [=registration ceremony|registration=] or [=authentication ceremonies=].
+        MUST be present if `alg`, `kh` and `tbs` are all absent.
+        MUST NOT be set to [FALSE].
 
     Note: The `args` entry is defined as a byte string containing CBOR-encoded data
     instead of a direct CBOR map because the [=CTAP2 canonical CBOR encoding form=] allows at most 4 levels of nested CBOR structures.
@@ -8561,6 +8683,18 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         The CBOR map keys `kh`, `tbs`, `err`, `args`, `alg` and `sig` are aliases of integer values,
         defined above and below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
+    1. If <code>|extInput|[support]</code> is present and set to [TRUE],
+        add the following entries to |extOutput|:
+
+        - `support`: An array describing what algorithms and algorithm combinations the authenticator supports
+            in the format described in the authenticator extension output section.
+
+            The authenticator MAY omit this member if including it
+            would overflow the authenticator's computational resources or protocol message size limits.
+
+        The CBOR map key `support` is an alias of an integer value,
+        defined above and below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
+
     1. Set <code>|authData|.[=authData/extensions=]["previewSign5"]</code> to |extOutput|.
 
 
@@ -8572,19 +8706,25 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     alg = 3
     flags = 4
     sig = 6
+    support = 8
     err = -1
 
     $$extensionOutput //= (
       previewSign5: {
-        ; Registration or authentication outputs
-        alg     => COSEAlgorithmIdentifier,  ; Algorithm chosen from alg input
-        //
-        ; Authentication outputs
-        sig     => bstr,                     ; Signature over tbs input
-        //
-        ; Error output
-        err     => previewSignError,
-        //
+        (
+          ; Registration output
+          alg   => COSEAlgorithmIdentifier,  ; Algorithm chosen from alg input
+          //
+          ; Authentication output
+          sig   => bstr,                     ; Signature over tbs input
+          //
+          ; Error output
+          err   => previewSignError,         ; Signature or key generation error
+        ),
+        ? support => any,                    ; Supported algorithms and combinations
+      }
+
+      / {
         ; Attestation fields
         flags   => &(unattended: 0b000,
                      require-up: 0b001,
@@ -8602,21 +8742,106 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
       cose-sign-args-missing-param: 7,
       cose-sign-args-unknown-param: 8,
     )
+
+    previewSignSupport = [
+      // Supported top-level credential algorithms, ordered from most to least preferred
+      parent-algorithms: [+ COSEAlgorithmIdentifier ],
+      // Supported previewSign5 algorithms, ordered from most to least preferred,
+      // or absent if equal to parent-algorithms
+      ? algorithms: [+ COSEAlgorithmIdentifier ],
+
+      // Optional sparse matrix of supported combinations
+      // of parent credential algorithm and previewSign key algorithm.
+      // If absent, then ALL combinations are supported.
+      ? (
+        // If true, then subsequent items define combinations that are supported and every other combination is NOT supported.
+        // If false, then subsequent items define combinations that are NOT supported and every other combination IS supported.
+        supported: bool,
+
+        // Sparse matrix of supported or unsupported (as indicated by `supported`) algorithm combinations
+        + (
+            ; Index range of parent-algorithms
+            parent-start: uint,
+            ? parent-len: nint,
+            ; Index range of algorithms that are or are not supported
+            ; in combination with any parent credential algorithm in the preceding parent range
+            child-start: uint,
+            ? child-len: nint,
+        ),
+      ),
+    ]
     ```
 
     :   alg
     ::  The {{COSEAlgorithmIdentifier}} for the signature algorithm chosen from the `alg` input.
-        MUST be present in [=registration ceremonies=] unless `err` is present.
-        MAY be present in [=authentication ceremonies=] unless `err` is present.
+        MAY be present in [=registration ceremonies=] unless `err` is present.
+        MAY be present in [=authentication ceremonies=] unless `sig` or `err` is present.
 
     :   sig
     ::  A signature over the extension input `tbs`, if present, by the signing private key.
         MUST NOT be present in [=registration ceremonies=].
-        MAY be present in [=authentication ceremonies=] unless `err` is present.
+        MAY be present in [=authentication ceremonies=] unless `alg` or `err` is present.
+
+    :   support
+    ::  A definition of supported algorithms and combinations of parent credential algorithm and `previewSign5` key algorithm.
+        Present only if the `support` input was present and set to [TRUE],
+        but MAY be absent even if `support` was [TRUE] if `alg` or `sig` is present.
+
+        Its value is an array containing at least two items.
+
+        The first item, labeled `parent-algorithms` in the CDDL,
+        is an array of COSE algorithm identifiers supported as top-level [=credential=] algorithms
+        in the authenticator's order of preference.
+        Note that unlike {{PublicKeyCredentialCreationOptions/pubKeyCredParams}}
+        and the [[FIDO-CTAP]] `authentiatorGetInfo` member `algorithms` (0x0A),
+        `parent-algorithms` contains only the {{COSEAlgorithmIdentifier}} value,
+        not {{PublicKeyCredentialParameters}} objects.
+
+        The second item, labeled `algorithms` in the CDDL,
+        is either an array of COSE algorithm identifiers supported as `alg` inputs,
+        in the authenticator's order of preference,
+        or absent if `algorithms` equals `parent-algorithms`.
+
+        The third and subsequent items, if present,
+        define combinations of parent credential algorithm and `previewSign5` algorithm that are or are not supported.
+        The third item is labeled `supported` in the CDDL.
+        If absent, then ALL combinations are supported.
+        If [TRUE], then subsequent items describe combinations that are supported and every other combination is NOT supported.
+        If [FALSE], then subsequent items describe combinations that are NOT supported and every other combination is supported.
+
+        Subsequent items cycle between labels `parent-start`, optional `parent-len`, `child-start` and optional `child-len`.
+        Each `parent-start` item is the start index of a sub-range of `parent-algorithms`.
+        If immediately followed by a `parent-len` item, then the length of the range is `-(parent-len) + 1`.
+        If immediately followed by a `child-start` item, then the length of the range is 1.
+        The `child-start` item immediately following a `parent-start` or `parent-len`
+        is the start index of a sub-range of `algorithms`.
+        If immediately followed by a `child-len` item, then the length of the range is `-(child-len) + 1`.
+        If immediately followed by a `parent-start` item or the end of the array, then the length of the range is 1.
+        Given these two ranges of parent and child indices,
+        each combination of parent and child index identifies one combination of parent and `previewSign5` algorithm
+        that is supported if `supported` is [TRUE] or not supported if `supported` is [FALSE].
+        In other words, the two ranges define a "rectangle" in the table of combinations.
+        Further items define additional pairs of index ranges.
+
+        For example, the following CDDL describes a `previewSign5` extension output
+        indicating that the authenticator supports the same set of `previewSign5` algorithms as parent credential algorithms:
+        ES256, Ed25519, ES384, ML-DSA-44, ML-DSA-65 and ML-DSA-87 in that order of preference.
+        It supports all combinations except those where both the parent credential and the `previewSign5` key
+        are ML-DSA keys larger than ML-DSA-44:
+        ```
+        { 8: [
+          [-7, -8, -35, -48, -49, -50],  ; Supported parent credential algorithms
+                         ; previewSign5 algorithms are the same as parent algorithms
+          false,         ; Subsequent items denote unsupported combinations
+          3, 4, -1,      ; ML-DSA-44 parent disallows ML-DSA-65 or ML-DSA-87 child
+          4, -1, 3, -2,  ; ML-DSA-65 or ML-DSA-87 parent disallows any ML-DSA child
+        }
+        ```
 
     :   err
     ::  An error code. Present if and only if extension processing failed in some way.
-        MAY be present in [=registration ceremonies=] and [=authentication ceremonies=].
+        MAY be present in [=registration ceremonies=] unless `alg` is present.
+        MAY be present in [=authentication ceremonies=] unless `sig` or `alg` is present.
 
     :   flags
     ::  A copy of the `flags` input.
@@ -8672,12 +8897,11 @@ with the following {{DOMException}} error names for the following reasons:
         <tr>
             <td>{{NotSupportedError}}</td>
             <td>
-                - {{AuthenticationExtensionsSignInputs/generateKey}} and {{AuthenticationExtensionsSignInputs/signByCredential}}
-                    client inputs were both absent.
+                - The {{AuthenticationExtensionsClientInputs/previewSign5}} extension input was empty.
                 - {{AuthenticationExtensionsSignInputs/generateKey}} and {{AuthenticationExtensionsSignInputs/signByCredential}}
                     client inputs were both present.
-                - {{AuthenticationExtensionsSignInputs/generateKey}} was absent in a [=registration ceremony=].
                 - {{AuthenticationExtensionsSignInputs/signByCredential}} was present in a [=registration ceremony=].
+                - {{AuthenticationExtensionsSignInputs/support}} input was set to [FALSE].
             </td>
         </tr>
         <tr>
@@ -8767,6 +8991,16 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
             - Authenticator operations now instruct to respect `attestationFormat` parameter and "take into account `enterpriseAttestationPossible`"
                 when generating signing key pairs in authenticatorMakeCredential.
             - Authenticator may return `err` output `unsupported-assertion-operation` if `generateKey` is not supported in authentication ceremonies.
+    - Added optional `support` action to registration and authentication ceremonies.
+        - Client changes:
+            - Client input `support` and output `supportedAlgorithms` added.
+            - Client input `generateKey` is no longer required in registration ceremonies if `support` is present.
+            - Adjusted input validation logic to allow only `support` input but still require non-empty input.
+            - Added client processing steps for constructing `supportedAlgorithms` output from authenticator output.
+        - Authenticator changes:
+            - Registration and authentication inputs may now contain optional `support: true` to request list of supported algorithms and combinations.
+            - Registration and authentication outputs may now contain a `support` output listing of supported algorithms and combinations.
+            - `alg` or `kh` and `tbs` input is no longer required if `support` is present.
     - Changed client error names:
         - When `allowCredentials` is empty in `get()`: `DataError` instead of `NotSupportedError`.
         - When sizes of `allowCredentials` and `signByCredential` differ: `DataError` instead of `NotSupportedError`.
