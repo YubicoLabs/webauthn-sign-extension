@@ -8845,7 +8845,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
           false,         ; Subsequent items denote unsupported combinations
           3, 4, -1,      ; ML-DSA-44 parent disallows ML-DSA-65 or ML-DSA-87 child
           4, -1, 3, -2,  ; ML-DSA-65 or ML-DSA-87 parent disallows any ML-DSA child
-        }
+        ] }
         ```
 
     :   err
