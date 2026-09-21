@@ -8986,7 +8986,8 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
     - Permit `generateKey` in authentication ceremonies.
         - Client changes:
             - Client input `signByCredential` is no longer required in authentication ceremonies, but still forbidden in registration ceremonies.
-            - Exactly one of client inputs `generateKey` or `signByCredential` is required in authentication ceremonies.
+            - At least one of client inputs `generateKey`, `signByCredential` or `support` is required in authentication ceremonies,
+                and at most one of `generateKey` and `signByCredential`.
             - Registration and authentication processing steps merged to one set of processing steps for both operations.
             - Malformed authenticator outputs are now silently ignored.
             - Client extension output is now always set, but may be empty.
