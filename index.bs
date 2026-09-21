@@ -8731,7 +8731,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
           ; Error output
           err   => previewSignError,         ; Signature or key generation error
         ),
-        ? support => any,                    ; Supported algorithms and combinations
+        ? support => previewSignSupport,     ; Supported algorithms and combinations
       }
 
       / {
