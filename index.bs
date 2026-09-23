@@ -8513,27 +8513,29 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
     1. Let |authData| denote the [=authenticator data=] that will be returned
         from the [=authenticatorMakeCredential=] or [=authenticatorGetAssertion=] operation.
 
-    1. If <code>|extInput|</code> [=map/is empty=],
+    1. If <code>|extInput|</code> does not match the authenticator inputs CDDL,
         return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
-        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
+        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_CBOR_UNEXPECTED_TYPE`.
 
-    1. If <code>|extInput|[flags]</code> is present and <code>|extInput|[alg]</code> is not present,
+        For example this includes, but is not limited to, the following failure cases:
+
+        - <code>|extInput|</code> [=map/is empty=].
+        - <code>|extInput|[flags]</code> is present and <code>|extInput|[alg]</code> is not present.
+        - <code>|extInput|[flags]</code> is present and not equal to one of the values
+            `unattended` (`0b000`), `require-up` (`0b001`) or `require-uv` (`0b101`).
+        - At least one of <code>|extInput|[kh]</code>, <code>|extInput|[tbs]</code> or <code>|extInput|[args]</code> is present
+            and at least one of <code>|extInput|[kh]</code> or <code>|extInput|[tbs]</code> is not present.
+        - <code>|extInput|[alg]</code> is present
+            and at least one of <code>|extInput|[kh]</code>, <code>|extInput|[tbs]</code> or <code>|extInput|[args]</code> is present.
+        - <code>|extInput|[support]</code> is present and not equal to [TRUE].
+
+        The authenticator is not required to explicitly process CDDL for this validation,
+        but SHOULD still return the prescribed error code for equivalent error conditions.
+
+    1. If <code>|extInput|[kh]</code> is present
+        and the current authenticator operation is not [=authenticatorGetAssertion=],
         return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
-        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
-
-    1. If <code>|extInput|[kh]</code>, <code>|extInput|[tbs]</code> or <code>|extInput|[args]</code> is present:
-
-        1. If <code>|extInput|[alg]</code> is present,
-            return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
-            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
-
-        1. If the current authenticator operation is not [=authenticatorGetAssertion=],
-            return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
-            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
-
-        1. If <code>|extInput|[kh]</code> is not present or <code>|extInput|[tbs]</code> is not present,
-            return an error code equivalent to "{{NotSupportedError}}" and terminate these processing steps.
-            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_MISSING_PARAMETER`.
+        Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
 
     1. Let |extOutput| be an empty CBOR map.
 
@@ -8579,10 +8581,6 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
                 would overflow the authenticator's computational resources or protocol message size limits.
 
         1. Let |signFlags| be the value of <code>|extInput|[flags]</code>, or `0b001` if absent.
-
-        1. If |signFlags| is not one of the values `unattended` (`0b000`), `require-up` (`0b001`) or `require-uv` (`0b101`),
-            return an error code equivalent to "{{SyntaxError}}" and terminate these processing steps.
-            Implementations in [[FIDO-CTAP]] return the error code `CTAP2_ERR_INVALID_OPTION`.
 
         1. Use |signFlags|, |auxIkm| and a per-credential authenticator secret
             as the seeds to deterministically generate a new key pair for the algorithm |chosenAlg|.
@@ -8995,6 +8993,10 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
                 This may now result in empty authenticator extension input.
         - Authenticator changes:
             - Registration and authentication processing steps merged to one set of processing steps for both operations.
+            - Condensed various input validation errors to a blanket `CTAP2_ERR_CBOR_UNEXPECTED_TYPE` error:
+                - Invalid `flags` value (previously `CTAP2_ERR_INVALID_OPTION`)
+                - Missing `kh` or `tbs` (previously `CTAP2_ERR_INVALID_OPTION`)
+                - Input does not match CDDL (previously implicit)
             - Authenticator inputs CDDL now allows either `alg, ?flags` or `kh, tbs, ?args` in getAssertion inputs.
             - Authenticator outputs CDDL now allows either `alg` or `sig` in getAssertion output.
             - Key generation is now conditioned on `alg` input and may execute in authenticatorGetAssertion.
