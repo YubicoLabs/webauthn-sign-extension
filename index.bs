@@ -8200,43 +8200,50 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         1. Let |parentAlgorithms| be <code>|supportList|[0]</code>
             parsed as an array of integer values.
 
-        1. Let |childAlgorithms| be <code>|supportList|[1]</code>
-            parsed as an array of integer values if present,
-            or an alias of |parentAlgorithms| if absent.
+        1. Let |childAlgorithms| be an alias of |parentAlgorithms|.
+
+        1. Let |supportListIdx| be an integer initialized to 1.
+
+        1. If <code>|supportList|[i]</code> is present and is an array,
+            set |childAlgorithms| to <code>|supportList|[1]</code> parsed as an array of integer values
+            and increment |supportListIdx| by 1.
 
         1. Let |supportedAlgorithms| be an empty [=set=].
 
-        1. If <code>|supportList|[2]</code>
-            is absent or set to [FALSE]:
+        1. Let |supported| be [FALSE].
 
+        1. If <code>|supportList|[i]</code> is present and set to a Boolean value:
+            1. Set |supported| to <code>|supportList|[i]</code>.
+            1. Increment |supportListIdx| by 1.
+
+        1. If |supported| is [FALSE]:
             1. [=list/For each=] |parentAlg| of |parentAlgorithms|:
                 1. [=list/For each=] |childAlg| of |childAlgorithms|:
                     1. Add (|parentAlg|, |childAlg|) to |supportedAlgorithms|.
 
-        1. Let |supportRangesIdx| be an integer initialized to 3.
-        1. [=While=] <code>|supportList|[|supportRangesIdx|]</code> [=list/exists=]:
+        1. [=While=] <code>|supportList|[|supportListIdx|]</code> [=list/exists=]:
 
-            1. Let |parentStart| be <code>|supportList|[|supportRangesIdx|]</code>
+            1. Let |parentStart| be <code>|supportList|[|supportListIdx|]</code>
                 parsed as a nonnegative integer.
-                Increment |supportRangesIdx| by 1.
+                Increment |supportListIdx| by 1.
 
             1. Let |parentEnd| be an integer initialized to |parentStart| + 1.
-            1. If <code>|supportList|[|supportRangesIdx|]</code> is negative:
-                1. Set |parentEnd| to <code>|parentStart| - |supportList|[|supportRangesIdx|] + 1</code>.
-                    Increment |supportRangesIdx| by 1.
+            1. If <code>|supportList|[|supportListIdx|]</code> is negative:
+                1. Set |parentEnd| to <code>|parentStart| - |supportList|[|supportListIdx|] + 1</code>.
+                    Increment |supportListIdx| by 1.
 
-            1. Let |childStart| be <code>|supportList|[|supportRangesIdx|]</code>
+            1. Let |childStart| be <code>|supportList|[|supportListIdx|]</code>
                 parsed as a nonnegative integer.
-                Increment |supportRangesIdx| by 1.
+                Increment |supportListIdx| by 1.
 
             1. Let |childEnd| be an integer initialized to |childStart| + 1.
-            1. If <code>|supportList|[|supportRangesIdx|]</code> [=list/exists=] and is negative:
-                1. Set |childEnd| to <code>|childStart| - |supportList|[|supportRangesIdx|] + 1</code>.
-                    Increment |supportRangesIdx| by 1.
+            1. If <code>|supportList|[|supportListIdx|]</code> [=list/exists=] and is negative:
+                1. Set |childEnd| to <code>|childStart| - |supportList|[|supportListIdx|] + 1</code>.
+                    Increment |supportListIdx| by 1.
 
             1. [=For each=] |parentIdx| of [=the range=] |parentStart| to |parentEnd|, exclusive:
                 1. [=For each=] |childIdx| of [=the range=] |childStart| to |childEnd|, exclusive:
-                    1. If <code>|supportList|[2]</code> is [FALSE],
+                    1. If |supported| is [FALSE],
                         [=set/remove=] (|parentAlgorithms|[|parentIdx|], |childAlgorithms|[|childIdx|]) from |supportedAlgorithms|.
                         Otherwise,
                         [=set/append=] (|parentAlgorithms|[|parentIdx|], |childAlgorithms|[|childIdx|]) to |supportedAlgorithms|.
