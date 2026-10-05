@@ -8865,7 +8865,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         require [=user presence=] and [=user verification=]:
 
         - If `unattended` (`0b000`), signatures do not require [=user presence=] or [=user verification=].
-        - If `require-up` (`0b001`), signatures require [=user verification=] but do not require [=user presence=].
+        - If `require-up` (`0b001`), signatures require [=user presence=] but do not require [=user verification=].
         - If `require-uv` (`0b101`), signatures require [=user presence=] and [=user verification=].
 
     The [=unsigned extension output=] is a CBOR map with the structure of the following CDDL:
@@ -9035,6 +9035,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
         when signing key UV requirement is not satisfied.
     - Removed requirement for `allowCredentialDescriptorList` to be non-empty in authenticator layer.
     - Made default value of `flags` input explicit in authenticator processing steps.
+    - Fixed inverted description of `require-up` value of `flags` output in attestation authenticator extension outputs.
     - Editorial and formatting fixes.
 
 - Version 4
