@@ -8424,9 +8424,10 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
     generateKeyInputs = (
       alg        => [ + COSEAlgorithmIdentifier ],
-      ? flags    => &(unattended: 0b000,
-                      require-up: 0b001,
-                      require-uv: 0b101) .default 0b001,
+      ? flags    => &(unattended:    0b000,
+                      require-up:    0b001,
+                      require-uv:    0b100,
+                      require-up-uv: 0b101) .default 0b001,
     )
     signInputs = (
       kh         => bstr,
@@ -8467,7 +8468,8 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
         - If `unattended` (`0b000`), signatures will not require [=user presence=] or [=user verification=].
         - If `require-up` (`0b001`), signatures will require [=user presence=] but will not require [=user verification=].
-        - If `require-uv` (`0b101`), signatures will require [=user presence=] and [=user verification=].
+        - If `require-uv` (`0b100`), signatures will require [=user verification=] but will not require [=user presence=].
+        - If `require-up-uv` (`0b101`), signatures will require [=user presence=] and [=user verification=].
 
         If not present, the default is `require-up` (`0b001`).
 
@@ -8529,7 +8531,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         - <code>|extInput|</code> [=map/is empty=].
         - <code>|extInput|[flags]</code> is present and <code>|extInput|[alg]</code> is not present.
         - <code>|extInput|[flags]</code> is present and not equal to one of the values
-            `unattended` (`0b000`), `require-up` (`0b001`) or `require-uv` (`0b101`).
+            `unattended` (`0b000`), `require-up` (`0b001`), `require-uv` (`0b100`) or `require-up-uv` (`0b101`).
         - At least one of <code>|extInput|[kh]</code>, <code>|extInput|[tbs]</code> or <code>|extInput|[args]</code> is present
             and at least one of <code>|extInput|[kh]</code> or <code>|extInput|[tbs]</code> is not present.
         - <code>|extInput|[alg]</code> is present
@@ -8741,9 +8743,10 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
       / {
         ; Attestation fields
-        flags   => &(unattended: 0b000,
-                     require-up: 0b001,
-                     require-uv: 0b101),
+        flags   => &(unattended:    0b000,
+                     require-up:    0b001,
+                     require-uv:    0b100,
+                     require-up-uv: 0b101),
       },
     )
 
@@ -8866,7 +8869,8 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
         - If `unattended` (`0b000`), signatures do not require [=user presence=] or [=user verification=].
         - If `require-up` (`0b001`), signatures require [=user presence=] but do not require [=user verification=].
-        - If `require-uv` (`0b101`), signatures require [=user presence=] and [=user verification=].
+        - If `require-uv` (`0b100`), signatures require [=user verification=] but do not require [=user presence=].
+        - If `require-up-uv` (`0b101`), signatures require [=user presence=] and [=user verification=].
 
     The [=unsigned extension output=] is a CBOR map with the structure of the following CDDL:
 
@@ -9035,6 +9039,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
         when signing key UV requirement is not satisfied.
     - Removed requirement for `allowCredentialDescriptorList` to be non-empty in authenticator layer.
     - Made default value of `flags` input explicit in authenticator processing steps.
+    - Added `flags` input value `require-uv (0b100)` and renamed `require-uv (0b101)` to `require-up-uv (0b101)`.
     - Fixed inverted description of `require-up` value of `flags` output in attestation authenticator extension outputs.
     - Editorial and formatting fixes.
 
