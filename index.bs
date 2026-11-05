@@ -5233,6 +5233,8 @@ a numbered step. If outdented, it (today) is rendered as a bullet in the midst o
             decrypt it.
 1. If any error occurred while creating the new credential object, return an error code equivalent to "{{UnknownError}}" and
     terminate the operation.
+1. Let |attestationFormat| be the first supported [=attestation statement format identifier=] from |attestationFormats|, taking into account |enterpriseAttestationPossible|.
+    If |attestationFormats| contains no supported value, then let |attestationFormat| be the [=attestation statement format identifier=] most preferred by this authenticator.
 1. Let |processedExtensions| be the result of [=authenticator extension processing=] [=map/for each=] supported [=extension
     identifier=] → [=authenticator extension input=] in |extensions|.
 1. If the [=authenticator=]:
@@ -5252,8 +5254,6 @@ a numbered step. If outdented, it (today) is rendered as a bullet in the midst o
     </dl>
 
 1. Let |attestedCredentialData| be the [=attested credential data=] byte array including the |credentialId| and |publicKey|.
-1. Let |attestationFormat| be the first supported [=attestation statement format identifier=] from |attestationFormats|, taking into account |enterpriseAttestationPossible|.
-    If |attestationFormats| contains no supported value, then let |attestationFormat| be the [=attestation statement format identifier=] most preferred by this authenticator.
 1. Let |authenticatorData| [=perform the following steps to generate an authenticator data structure|be the byte array=] specified in [[#sctn-authenticator-data]], including |attestedCredentialData| as the
     <code>[=attestedCredentialData=]</code> and |processedExtensions|, if any, as the
     <code>[=authData/extensions=]</code>.
@@ -9010,6 +9010,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 
 - Version 6
     - Published: TBD
+    - Moved initialization of |attestationFormat| to before extension processing in authenticatorMakeCredential procedure.
     - Fixed occurrences of `supportList[i]` that should be `supportList[supportListIdx]`.
     - Minor editorial fixes.
 
