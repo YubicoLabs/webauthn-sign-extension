@@ -8614,8 +8614,10 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
             - `alg`: |chosenAlg|.
 
         1. Let |attObjStr| be a CBOR map
-            representing an [=attestation object=] generated as described in [[#sctn-generating-an-attestation-object]],
+            representing an [=attestation object=] for the generated signing key pair (|p|, |P|),
+            generated as described in [[#sctn-generating-an-attestation-object]],
             taking into account the value of |enterpriseAttestationPossible| if available,
+            (if the authenticator operation is [=authenticatorMakeCredential=]; otherwise [FALSE]),
             using the inputs:
 
             - |attestationFormat|: |attestationFormat| if the authenticator operation is [=authenticatorMakeCredential=],
