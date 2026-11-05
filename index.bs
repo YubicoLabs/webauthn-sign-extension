@@ -8622,6 +8622,14 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
             - |attestationFormat|: |attestationFormat| if the authenticator operation is [=authenticatorMakeCredential=],
                 otherwise the [=attestation statement format identifier=] most preferred by this authenticator.
+
+                This MUST NOT result in generating a [=self attestation=].
+                If it would, then the [[#sctn-none-attestation|`none`]] attestation statement format MUST be used instead.
+
+                Note: [=Self attestation=] is always meaningless for signing key pairs since they are not input-restricted.
+                The [=[RP]=] or any [=client=] can at any time request the signing private key to sign any arbitrarily chosen input data,
+                including a forged self attestation statement for itself.
+
             - |authData|: an [=authenticator data=] structure with the contents:
 
                 - [=authData/rpIdHash=]: <code>|authData|.[=authData/rpIdHash=]</code>.
@@ -9017,6 +9025,9 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 - Version 6
     - Published: TBD
     - Fixed logic for detecting |unsupportedCombination| case in authenticator processing step 6.5.1.
+    - Forbid self attestation for signing key pairs, since it's meaningless
+        and also incompatible with some key generation algorithms such as ARKG
+        (where the generated seed pair is not suitable for signing with directly).
     - Moved initialization of |attestationFormat| to before extension processing in authenticatorMakeCredential procedure.
     - Fixed occurrences of `supportList[i]` that should be `supportList[supportListIdx]`.
     - Minor editorial fixes and clarifications.
