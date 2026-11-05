@@ -8267,7 +8267,11 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         The CBOR map key `support` is an alias of an integer value,
         defined below in the CDDL for the [=authenticator extension input=] and [=authenticator extension output=].
 
-    1. Set the [=client extension output=] <code>|assertionCreationData|.[=assertionCreationData/clientExtensionResults=].{{AuthenticationExtensionsClientOutputs/previewSign5}}</code>
+    1. Set the {{AuthenticationExtensionsClientOutputs/previewSign5}} [=client extension output=]
+        (<code>|credentialCreationData|.[=credentialCreationData/clientExtensionResults=].{{AuthenticationExtensionsClientOutputs/previewSign5}}</code>
+        in a [=registration ceremony=], or
+        <code>|assertionCreationData|.[=assertionCreationData/clientExtensionResults=].{{AuthenticationExtensionsClientOutputs/previewSign5}}</code>
+        in an [=authentication ceremony=])
         to an {{AuthenticationExtensionsSignOutputs}} value with the members:
 
         - {{AuthenticationExtensionsSignOutputs/generatedKey}}: |generatedKeyResult| if not null, otherwise omit this member.
@@ -9012,7 +9016,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
     - Published: TBD
     - Moved initialization of |attestationFormat| to before extension processing in authenticatorMakeCredential procedure.
     - Fixed occurrences of `supportList[i]` that should be `supportList[supportListIdx]`.
-    - Minor editorial fixes.
+    - Minor editorial fixes and clarifications.
 
 - Version 5
     - Published: 2026-11-05
