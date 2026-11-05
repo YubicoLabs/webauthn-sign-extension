@@ -8206,16 +8206,16 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
 
         1. Let |supportListIdx| be an integer initialized to 1.
 
-        1. If <code>|supportList|[i]</code> is present and is an array,
-            set |childAlgorithms| to <code>|supportList|[1]</code> parsed as an array of integer values
+        1. If <code>|supportList|[|supportListIdx|]</code> is present and is an array,
+            set |childAlgorithms| to <code>|supportList|[|supportListIdx|]</code> parsed as an array of integer values
             and increment |supportListIdx| by 1.
 
         1. Let |supportedAlgorithms| be an empty [=set=].
 
         1. Let |supported| be [FALSE].
 
-        1. If <code>|supportList|[i]</code> is present and set to a Boolean value:
-            1. Set |supported| to <code>|supportList|[i]</code>.
+        1. If <code>|supportList|[|supportListIdx|]</code> is present and set to a Boolean value:
+            1. Set |supported| to <code>|supportList|[|supportListIdx|]</code>.
             1. Increment |supportListIdx| by 1.
 
         1. If |supported| is [FALSE]:
@@ -9010,6 +9010,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 
 - Version 6
     - Published: TBD
+    - Fixed occurrences of `supportList[i]` that should be `supportList[supportListIdx]`.
 
 - Version 5
     - Published: 2026-11-05
