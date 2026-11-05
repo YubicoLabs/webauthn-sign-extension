@@ -8276,7 +8276,7 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
         - {{AuthenticationExtensionsSignOutputs/errorCode}}:
             <code>|authData|.[=authData/extensions=]["previewSign5"][err]</code> if present, otherwise omit this member.
 
-            The CBOR map key `err` is an aliase of an integer value,
+            The CBOR map key `err` is an alias of an integer value,
             defined below in the CDDL for the [=authenticator extension output=].
 
 
@@ -9011,6 +9011,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 - Version 6
     - Published: TBD
     - Fixed occurrences of `supportList[i]` that should be `supportList[supportListIdx]`.
+    - Minor editorial fixes.
 
 - Version 5
     - Published: 2026-11-05
