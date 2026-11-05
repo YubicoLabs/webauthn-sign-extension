@@ -6,10 +6,10 @@ Notes:
   tags will be rendered. It also has the spec 'Level' value (gratuitously) appended.
 -->
 
-<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 5</h1>
+<h1>DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 6-SNAPSHOT</h1>
 
 <pre class='metadata'>
-Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 5
+Title: DRAFT: Web Authentication `sign` extension: Signing arbitrary data using the Web Authentication API. Version 6-SNAPSHOT
 Status: ED
 Prepare for TR: false
 ED: https://w3c.github.io/webauthn/
@@ -7881,7 +7881,7 @@ This permission MUST be configured per-origin and MUST NOT offer the capability 
 This section defines extensions that are both [=client extensions=] and [=authenticator extensions=].
 
 
-### Signing extension (`previewSign5`) version 5 ### {#sctn-sign-extension}
+### Signing extension (`previewSign5`) version 6-SNAPSHOT ### {#sctn-sign-extension}
 
 This [=authenticator extension|authenticator=] [=registration extension=] and [=authentication extension=]
 allows a [=[RP]=] to sign arbitrary data using an asymmetric key pair associated with a [=credential=]
@@ -9007,6 +9007,9 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 #### Revision History #### {#sctn-sign-extension-history}
 
 [INFORMATIVE]
+
+- Version 6
+    - Published: TBD
 
 - Version 5
     - Published: 2026-11-05
