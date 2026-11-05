@@ -8573,9 +8573,9 @@ but not support an ML-DSA-87 signing key pair associated with an ML-DSA-87 crede
                 in combination with the algorithm of the associated [=public key credential=],
                 set |chosenAlg| to |candidateAlg| and [=/break=].
 
-            1. If the [=authenticator=] can support |chosenAlg| for signing operations,
+            1. If the [=authenticator=] can support |candidateAlg| for signing operations,
                 but not in combination with the algorithm of the associated [=public key credential=],
-                set |unsupportedCombination| to [FALSE].
+                set |unsupportedCombination| to [TRUE].
 
         1. If |chosenAlg| is null:
 
@@ -9014,6 +9014,7 @@ To decode |kh|, producing the output |chosenAlg|, |signFlags| and |auxIkm|, perf
 
 - Version 6
     - Published: TBD
+    - Fixed logic for detecting |unsupportedCombination| case in authenticator processing step 6.5.1.
     - Moved initialization of |attestationFormat| to before extension processing in authenticatorMakeCredential procedure.
     - Fixed occurrences of `supportList[i]` that should be `supportList[supportListIdx]`.
     - Minor editorial fixes and clarifications.
